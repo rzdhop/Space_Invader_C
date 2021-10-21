@@ -1,7 +1,0 @@
-.vscode/launch.json
-.vscode/tasks.json
-src/PROJET
-src/struct_def.o
-src/main.o
-src/Makefile
-bin/executable
