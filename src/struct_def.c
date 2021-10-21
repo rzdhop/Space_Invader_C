@@ -19,7 +19,7 @@ char *GetShip(char *fileName, int *fileSizePTR)
   //allocate memory to welcome fileSize number of type char * (addr retuned in malocShipFile) 
   char *malocShipFile = (char *) malloc(fileSize);
 
-  //set fileSizerPTR 
+  //set fileSizePTR 
   *fileSizePTR = fileSize;
 
   //Init size of the buffer that contain the ship 
@@ -29,7 +29,7 @@ char *GetShip(char *fileName, int *fileSizePTR)
   rewind(ship);
 
   //Get the char of the file in the tab to print the ship
-  for(int i= 0; i< fileSize && (bufferChar = fgetc(ship)) != EOF; i++)
+  for(int i= 0; i < fileSize && (bufferChar = fgetc(ship)) != EOF; i++)
   {
     shipFile[i] = bufferChar;
   }
@@ -43,17 +43,56 @@ char *GetShip(char *fileName, int *fileSizePTR)
   return malocShipFile;
 
 }
-void diplayShip(int fileSizeShip, char *shipFile)
+
+void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 {
-  for(int i= 0; i< fileSizeShip; i++) printf("%c", shipFile[i]);
-  printf("\n");
+  int f=0;
+  for(int i= 0; i< fileSizeShip; i++) 
+  {
+    if (shipFile[i] == 10)
+    {
+      f++;
+      printf("\n");
+      printf("\033[%d;%dH", y+f, x);
+      i++;
+    }
+    printf("%c", shipFile[i]);
+  }
+    printf("\n");
 } 
+
+void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
+{ 
+  char eraserShipFile[fileSizeShip];
+  for(int i= 0; i< fileSizeShip; i++) //create a mask of the ship with only spaces instead of characters
+  {
+    eraserShipFile[i]=ShipFile[i];
+    if (eraserShipFile[i] != 10) //we keep only the Line Feed (LF)
+    {
+      eraserShipFile[i] = 32;
+    }
+  }
+ int f=0;
+  for(int i= 0; i< fileSizeShip; i++) 
+  {
+    if (eraserShipFile[i] == 10)
+    {
+      f++;
+      printf("\n");
+      printf("\033[%d;%dH", y+f, x);
+      i++;
+    }
+    printf("%c", eraserShipFile[i]);
+  }
+    printf("\n");
+}
 
 struct EnvData
 {
     unsigned int terminalSize;
     unsigned int difficulty;
 };
+
 typedef struct Ship
 {
     unsigned int posX, posY;
