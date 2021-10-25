@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 
 #define bool unsigned int 
 #define true 1
@@ -64,6 +65,7 @@ void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
 { 
   char eraserShipFile[fileSizeShip];
+  printf("\033[%d;%dH", y, x);
   for(int i= 0; i< fileSizeShip; i++) //create a mask of the ship with only spaces instead of characters
   {
     eraserShipFile[i]=ShipFile[i];
