@@ -24,9 +24,8 @@ return result;
 
 void fireMissile(char missile, int y, int x)
 {      
-        printf("\033[%d;%dH%c", y, x, missile);  
+        printf("\033[%d;%dH    ", y, x);  
+        printf("\033[%d;%dH%c", y+1, x, missile);  
         fflush(stdout);
-        usleep(5000);
-        printf("\033[%d;%dH                ", y, x);
-        fflush(stdout);
+        usleep(7000);
 }
