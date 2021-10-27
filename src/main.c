@@ -10,6 +10,7 @@
 
 int main(void){
   system("clear");
+  //init Thread 
   int fileSizeShip1,fileSizeShip2;
   int y=1; //Vertical axis 
   int x=0; //Horizontal axis
