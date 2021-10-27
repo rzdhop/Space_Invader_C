@@ -47,8 +47,8 @@ char *GetShip(char *fileName, int *fileSizePTR)
 
 void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 {
-  int f=0;
-  for(int i= 0; i< fileSizeShip; i++) 
+
+  for(int i= 0, f=0; i< fileSizeShip; i++) 
   {
     if (shipFile[i] == 10)
     {
@@ -64,9 +64,13 @@ void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 
 void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
 { 
+  
   char eraserShipFile[fileSizeShip];
-  printf("\033[%d;%dH", y, x);
-  for(int i= 0; i< fileSizeShip; i++) //create a mask of the ship with only spaces instead of characters
+  printf("\033[%d;%dH", y, x);//positionne le curseur a la position actuelle du vaisseau
+
+  //create a mask of the ship with only spaces instead of characters
+  //replace each table position with ' ' if different than LF (return line)
+  for(int i= 0; i< fileSizeShip; i++) 
   {
     eraserShipFile[i]=ShipFile[i];
     if (eraserShipFile[i] != 10) //we keep only the Line Feed (LF)
@@ -74,10 +78,11 @@ void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
       eraserShipFile[i] = 32;
     }
   }
- int f=0;
-  for(int i= 0; i< fileSizeShip; i++) 
+  
+  //write the actual table (full of ' ') to erase the ship
+  for(int i= 0, f=0; i< fileSizeShip; i++) 
   {
-    if (eraserShipFile[i] == 10)
+    if (eraserShipFile[i] == 10)//LF
     {
       f++;
       printf("\n");
@@ -93,15 +98,4 @@ struct EnvData
 {
     unsigned int terminalSize;
     unsigned int difficulty;
-};
-
-typedef struct Ship
-{
-    unsigned int posX, posY;
-    char direction;
-    unsigned int life;
-    bool state; 
-    bool isFriendly; 
-    struct Ship *nextShip;
-
 };
