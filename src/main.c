@@ -23,6 +23,7 @@ void *printinga(void* _threadArgs)
 {
   args_thread *args = (args_thread*) _threadArgs;
   int fileSizeShip1,fileSizeShip2;
+  int lastx=0, lasty=0;
   int y=1; //Vertical axis
   int x=2; //Horizontal axis
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
@@ -83,18 +84,18 @@ void *printinga(void* _threadArgs)
         }
         if (*(args->a) == 32)//Fire - Space key
         {
-        int lastx=0, lasty=0;
           for (int i = 0; i < 50; i++)
           {
-              lastx = x;
-              lasty = y+i;
-              printf("\033[%d;%dH    ", lasty, x);
-              printf("\033[%d;%dH%c", lasty+1, x, missile);
+              lastx = x+4;
+              lasty = (y+5)+i;
+              printf("\033[%d;%dH%c", lasty, lastx, 32);
+              printf("\033[%d;%dH%c", lasty+1, lastx, missile);
               fflush(stdout);
               usleep(7000);
           }
-        printf("\033[%d;%dH%c", lasty, x, 32);
+        printf("\033[%d;%dH%c", lasty, lastx, 32);
         }
+    usleep(6000);
     }
   }
   return NULL;
