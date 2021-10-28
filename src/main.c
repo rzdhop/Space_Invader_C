@@ -20,13 +20,13 @@ struct args_struct_thread
 };
 
 void *printinga(void* _threadArgs)
-{   
+{
   args_thread *args = (args_thread*) _threadArgs;
   int fileSizeShip1,fileSizeShip2;
-  int y=1; //Vertical axis 
+  int y=1; //Vertical axis
   int x=2; //Horizontal axis
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
-  char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);  
+  char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
   printf("\033[%d;%dH", y, x);
   diplayShip(fileSizeShip1, shipFile1, y, x);
   char missile=73;
@@ -34,12 +34,11 @@ void *printinga(void* _threadArgs)
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   int ymax=w.ws_row-4;
   int xmax=w.ws_col-7;
-    while (1)
-    {
-      printf("%c", *(args->a));
-      if (args->a != 0) //Ship movement
+  while (1)
+  {
+      if (*(args->a) != 0) //Ship movement
       {
-          if (*(args->a) == 122)//Up - Z key
+        if (*(args->a) == 122)//Up - Z key
         {
           if ((y-4)>0)
           {
@@ -84,13 +83,17 @@ void *printinga(void* _threadArgs)
         }
         if (*(args->a) == 32)//Fire - Space key
         {
+        int lastx=0, lasty=0;
           for (int i = 0; i < 50; i++)
           {
-              printf("\033[%d;%dH    ", y+i, x);  
-              printf("\033[%d;%dH%c", y+i+1, x, missile);  
+              lastx = x;
+              lasty = y+i;
+              printf("\033[%d;%dH    ", lasty, x);
+              printf("\033[%d;%dH%c", lasty+1, x, missile);
               fflush(stdout);
               usleep(7000);
           }
+        printf("\033[%d;%dH%c", lasty, x, 32);
         }
     }
   }
@@ -98,17 +101,16 @@ void *printinga(void* _threadArgs)
 }
 
 int main(void){
-  char *a;
+  char a;
   system("clear");
   printf("\e[?25l"); //hide the terminal cursor
   pthread_t thread_id[2];
   args_thread *args = (args_thread*)malloc(sizeof(args_thread));
-  args->a = a;
+  args->a = &a;
   pthread_create(&thread_id[0], NULL, printinga, (void *)args);
   while (1)
   {
-    *a=key_pressed();
+    a=key_pressed();
   }
-  
   return 0;
 }
