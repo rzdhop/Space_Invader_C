@@ -37,8 +37,8 @@ struct args_struct_thread
 {
   main_ship *ship;
   char *keyPressed;
-  int *xmax;
-  int *ymax;
+  int xmax;
+  int ymax;
   int *isGameDone_ptr;
 };
 
@@ -62,28 +62,6 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   {
       if (*(args->keyPressed) != 0) //Ship movement
       {
-        //if (*(args->keyPressed) == 122)//Up - Z key
-        //{
-        //  if ((y-4)>0)
-        //  {
-        //  eraseShip(fileSizeShip1, shipFile1, y, x);
-        //  y=y-4;
-        //  printf("\033[%d;%dH", y, x);
-        //  diplayShip(fileSizeShip1, shipFile1, y, x);
-        //  printf("\033[%d;%dH", y, x);
-        //  }
-        //}
-        //if (*(args->keyPressed) == 115)//Down - S key
-        //{
-        //  if ((y+4)<ymax)
-        //  {
-        //  eraseShip(fileSizeShip1, shipFile1, y, x);
-        //  y=y+4;
-        //  printf("\033[%d;%dH", y, x);
-        //  diplayShip(fileSizeShip1, shipFile1, y, x);
-        //  printf("\033[%d;%dH", y, x);
-        //  }
-        //}
         if (*(args->keyPressed) == 113)//Left - Q key
         {
           if ((x-4)>0)
