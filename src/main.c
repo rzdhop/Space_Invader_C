@@ -37,8 +37,8 @@ struct args_struct_thread
 {
   main_ship *ship;
   char *keyPressed;
-  int *xmax;
-  int *ymax;
+  int xmax;
+  int ymax;
   int *isGameDone_ptr;
 };
 
