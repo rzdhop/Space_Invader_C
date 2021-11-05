@@ -45,13 +45,14 @@ char *GetShip(char *fileName, int *fileSizePTR)
 
 }
 
-void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
+int diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 {
-
+int shipHeight=1;
   for(int i= 0, f=0; i< fileSizeShip; i++) 
   {
     if (shipFile[i] == 10)
     {
+      shipHeight++;
       f++;
       printf("\n");
       printf("\033[%d;%dH", y+f, x);
@@ -60,6 +61,7 @@ void diplayShip(int fileSizeShip, char *shipFile, int y, int x)
     printf("%c", shipFile[i]);
   }
     printf("\n");
+    return shipHeight;
 } 
 
 void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)

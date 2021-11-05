@@ -56,24 +56,24 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   int fire1=0, fire2=0, fire3=0, fire4=0, fire5=0, fire6=0;
   int t1, u1, t2, u2, t3, u3, t4, u4, t5, u5, t6, u6;
   char a=0;
+  int shipHeight=0;
 
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
   char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
   printf("\033[%d;%dH", y, x);
-  diplayShip(fileSizeShip1, shipFile1, y, x);
+  shipHeight = diplayShip(fileSizeShip1, shipFile1, y, x);
+  printf("\033[%d;%dH%d", 2, 2, shipHeight);
   char missile=73;
   printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
   while (1)
   {
         if (fire1==1)
     {
-        printf("\033[%d;%dH    ", t1-j1, u1);  
-        printf("\033[%d;%dH%c", t1-j1-1, u1, missile);  
-        fflush(stdout);
+      fireMissile(missile, t1-j1, u1);
       j1++;
-      if (j1>50)
+      if (j1> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t1-j1, u1);  
+        printf("\033[%d;%dH ", t1-j1, u1);  
         printf("\033[%d;%dH", y, x);         //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire1=0;
         j1=0;
@@ -81,13 +81,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     }
       if (fire2==1)
     {
-        printf("\033[%d;%dH    ", t2-j2, u2);  
-        printf("\033[%d;%dH%c", t2-j2-1, u2, missile);  
-        fflush(stdout);
+      fireMissile(missile, t2-j2, u2);
       j2++;
-      if (j2>50)
+      if (j2> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t2-j2, u2);  
+        printf("\033[%d;%dH ", t2-j2, u2);  
         printf("\033[%d;%dH", y, x);         //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire2=0;
         j2=0;
@@ -95,13 +93,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     }  
       if (fire3==1)
     {
-        printf("\033[%d;%dH    ", t3-j3, u3);  
-        printf("\033[%d;%dH%c", t3-j3-1, u3, missile);  
-        fflush(stdout);
-        j3++;
-      if (j3>50)
+      fireMissile(missile, t3-j3, u3);
+      j3++;
+      if (j3> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t3-j3, u3);  
+        printf("\033[%d;%dH ", t3-j3, u3);  
         printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire3=0;
         j3=0;
@@ -109,13 +105,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     }
       if (fire4==1)
     {
-        printf("\033[%d;%dH    ", t4-j4, u4);  
-        printf("\033[%d;%dH%c", t4-j4-1, u4, missile);  
-        fflush(stdout);
-        j4++;
-      if (j4>50)
+      fireMissile(missile, t4-j4, u4);
+      j4++;
+      if (j4> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t4-j4, u4);  
+        printf("\033[%d;%dH ", t4-j4, u4);  
         printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire4=0;
         j4=0;
@@ -123,13 +117,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     }
       if (fire5==1)
     {
-        printf("\033[%d;%dH    ", t5-j5, u5);  
-        printf("\033[%d;%dH%c", t5-j5-1, u5, missile);  
-        fflush(stdout);
-        j5++;
-      if (j5>50)
+      fireMissile(missile, t5-j5, u5);
+      j5++;
+      if (j5> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t5-j5, u5);  
+        printf("\033[%d;%dH ", t5-j5, u5);  
         printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire5=0;
         j5=0;
@@ -137,13 +129,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     }
     if (fire6==1)
     {
-        printf("\033[%d;%dH    ", t6-j6, u6);  
-        printf("\033[%d;%dH%c", t6-j6-1, u6, missile);  
-        fflush(stdout);
-        j6++;
-      if (j6>50)
+      fireMissile(missile, t6-j6, u6);
+      j6++;
+      if (j6> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH   ", t6-j6, u6);  
+        printf("\033[%d;%dH ", t6-j6, u6);  
         printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire6=0;
         j6=0;
@@ -273,7 +263,13 @@ int main(void){
   char keyPressed;
   system("clear");
   printf("\e[?25l"); //hide the terminal cursor
-  struct winsize w;
+
+  struct termios t;   //Struct to block any keyboard input on the Linux Terminal
+  tcgetattr(0, &t);
+  t.c_lflag &= ~ECHO;
+  tcsetattr(0, TCSANOW, &t);
+
+  struct winsize w;  //Struct to get Linux Terminal size
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   int ymax=w.ws_row-4;
   int xmax=w.ws_col-7;
