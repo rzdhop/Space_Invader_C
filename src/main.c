@@ -52,6 +52,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   int y = ship->coord->y;
   int x = ship->coord->x;
 
+  int eShipCnt=1;
   int j1=0, j2=0, j3=0, j4=0, j5=0, j6=0;
   int fire1=0, fire2=0, fire3=0, fire4=0, fire5=0, fire6=0;
   int t1, u1, t2, u2, t3, u3, t4, u4, t5, u5, t6, u6;
@@ -60,21 +61,62 @@ void *keystrokeInstanceHandler(void* _threadArgs)
 
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
   char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
-  printf("\033[%d;%dH", y, x);
-  shipHeight = diplayShip(fileSizeShip1, shipFile1, y, x);
-  printf("\033[%d;%dH%d", 2, 2, shipHeight);
+  fShip myShip;
+  fShip eShip;
+  eShip.posY=1;
+  eShip.posX= (args->xmax)/2;
+  myShip.posY = (args->ymax)-1;
+  myShip.posX= (args->xmax)/2;
+  char direction = 'l';
+  printf("\033[%d;%dH", myShip.posY, myShip.posX);
+  shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
   char missile=73;
-  printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
+  //printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
   while (1)
   {
+    if (eShipCnt != 450) //Test - push P button to generate a new ship once destroyed
+    {    
+      if (eShipCnt>200)
+      {
+        eShipCnt=0;
+        if (direction == 'l')
+        {direction = 'r';}
+        else  
+        {direction = 'l';}
+      }
+      eShipCnt++;
+      if (eShipCnt%20 == 0)
+      {
+        if (direction == 'l')
+        {
+          eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+          eShip.posX=eShip.posX-4;
+          diplayShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        }
+        if (direction == 'r')
+        {
+          eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+          eShip.posX=eShip.posX+4;
+          diplayShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        }
+      }
+    }
+
         if (fire1==1)
     {
       fireMissile(missile, t1-j1, u1);
       j1++;
+      if ((t1-j1)<(eShip.posY+shipHeight) && u1>eShip.posX && u1<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t1-j1, u1);  
+        fire1=0;
+        j1=0;
+        eShipCnt=450;
+      }      
       if (j1> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t1-j1, u1);  
-        printf("\033[%d;%dH", y, x);         //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire1=0;
         j1=0;
       }    
@@ -83,10 +125,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t2-j2, u2);
       j2++;
+      if ((t2-j2)<(eShip.posY+shipHeight) && u2>eShip.posX && u2<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t2-j2, u2);  
+        fire2=0;
+        j2=0;
+        eShipCnt=450;
+      }  
       if (j2> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t2-j2, u2);  
-        printf("\033[%d;%dH", y, x);         //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire2=0;
         j2=0;
       }    
@@ -95,10 +144,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t3-j3, u3);
       j3++;
+      if ((t3-j3)<(eShip.posY+shipHeight) && u3>eShip.posX && u3<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t3-j3, u3);  
+        fire3=0;
+        j3=0;
+        eShipCnt=450;
+      }  
       if (j3> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t3-j3, u3);  
-        printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire3=0;
         j3=0;
       }
@@ -107,10 +163,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t4-j4, u4);
       j4++;
+      if ((t4-j4)<(eShip.posY+shipHeight) && u4>eShip.posX && u4<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t4-j4, u4);  
+        fire4=0;
+        j4=0;
+        eShipCnt=450;
+      }  
       if (j4> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t4-j4, u4);  
-        printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire4=0;
         j4=0;
       }
@@ -119,10 +182,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t5-j5, u5);
       j5++;
+      if ((t5-j5)<(eShip.posY+shipHeight) && u5>eShip.posX && u5<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t5-j5, u5);  
+        fire5=0;
+        j5=0;
+        eShipCnt=450;
+      }       
       if (j5> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t5-j5, u5);  
-        printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire5=0;
         j5=0;
       }    
@@ -131,10 +201,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t6-j6, u6);
       j6++;
+      if ((t6-j6)<(eShip.posY+shipHeight) && u6>eShip.posX && u6<(eShip.posX + 8))
+      {
+        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        printf("\033[%d;%dH ", t6-j6, u6);  
+        fire6=0;
+        j6=0;
+        eShipCnt=450;
+      }  
       if (j6> (args->ymax)-shipHeight+2)
       {
         printf("\033[%d;%dH ", t6-j6, u6);  
-        printf("\033[%d;%dH", y, x);       //Return to origin to avoid keeping a letter at the top of the terminal when missile dissapears
         fire6=0;
         j6=0;
       }
@@ -165,85 +242,72 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         //  printf("\033[%d;%dH", y, x);
         //  }
         //}
+        if (a == 'p')
+        {
+          eShipCnt=0;
+        }
+        
         if (a == 113)//Left - Q key
         {
-          if ((x-4)>0)
+          if ((myShip.posX-4)>0)  //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, y, x);
-          x=x-4;
-          printf("\033[%d;%dH", y, x);
-          diplayShip(fileSizeShip1, shipFile1, y, x);
-          printf("\033[%d;%dH", y, x);
+          eraseShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
+          myShip.posX=myShip.posX-4;
+          diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
           continue;
-          }
-          else     //avoid characters to print and erase the ship when reaching terminal limit
-          {
-            printf("\033[%d;%dH", y, x);
-            diplayShip(fileSizeShip1, shipFile1, y, x);
-            printf("\033[%d;%dH", y, x);
-            continue;
           }
         }
         if (a == 100)//Right - D key
         {
-          if ((x+4)< args->xmax)
+          if ((myShip.posX+4)< args->xmax) //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, y, x);
-          x=x+4;
-          printf("\033[%d;%dH", y, x);
-          diplayShip(fileSizeShip1, shipFile1, y, x);
-          printf("\033[%d;%dH", y, x);
+          eraseShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
+          myShip.posX=myShip.posX+4;
+          diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
           continue;
-          }
-          else   //avoid characters to print and erase the ship when reaching terminal limit
-          {
-            printf("\033[%d;%dH", y, x);
-            diplayShip(fileSizeShip1, shipFile1, y, x);
-            printf("\033[%d;%dH", y, x);
-            continue;
           }
         }
         if (a == 32)//Fire - Space key
         {
           if (fire1==0)
           {
-            t1=y-1;
-            u1=x+4;
+            t1=myShip.posY-1;
+            u1=myShip.posX+4;
             fire1=1;
             continue;
           } 
           if (fire2==0)
           {
-            t2=y-1;
-            u2=x+4;
+            t2=myShip.posY-1;
+            u2=myShip.posX+4;
             fire2=1; 
             continue;
           }
           if (fire3==0)
           {
-          t3=y-1;
-          u3=x+4;
+          t3=myShip.posY-1;
+          u3=myShip.posX+4;
           fire3=1; 
           continue;
           }
           if (fire4==0)
           {
-          t4=y-1;
-          u4=x+4;
+          t4=myShip.posY-1;
+          u4=myShip.posX+4;
           fire4=1; 
           continue;
           }
           if (fire5==0)
           {
-          t5=y-1;
-          u5=x+4;
+          t5=myShip.posY-1;
+          u5=myShip.posX+4;
           fire5=1; 
           continue;
           } 
           if (fire6==0)
           {
-          t6=y-1;
-          u6=x+4;
+          t6=myShip.posY-1;
+          u6=myShip.posX+4;
           fire6=1; 
           continue;
           } 

@@ -48,6 +48,7 @@ char *GetShip(char *fileName, int *fileSizePTR)
 int diplayShip(int fileSizeShip, char *shipFile, int y, int x)
 {
 int shipHeight=1;
+printf("\033[%d;%dH", y, x);
   for(int i= 0, f=0; i< fileSizeShip; i++) 
   {
     if (shipFile[i] == 10)
