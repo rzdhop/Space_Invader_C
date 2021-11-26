@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "struct_def.h"
 
 char key_pressed()
 {
@@ -22,9 +23,8 @@ if (c != EOF) {ungetc(c, stdin) ; result = getchar();}
 return result;
 }
 
-void fireMissile(char missile, int y, int x)
+void fireMissile(int x, int y)
 {      
-        printf("\033[%d;%dH ", y, x);  
-        printf("\033[%d;%dH%c", y-1, x, missile);  
+        printf("\033[%d;%dH%c ", y, x, 'I');
         fflush(stdout);
 }

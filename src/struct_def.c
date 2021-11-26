@@ -7,6 +7,7 @@
 #define true 1
 #define false 0
 
+
 char *GetShip(char *fileName, int *fileSizePTR)
 {
   FILE * ship = fopen(fileName, "r");
@@ -97,8 +98,3 @@ void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
     printf("\n");
 }
 
-struct EnvData
-{
-    unsigned int terminalSize;
-    unsigned int difficulty;
-};
