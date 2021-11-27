@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include "struct_def.h"
 #include "key_pressed.h"
+#include "linked_list.h"
 
 typedef struct xy_coordinate coordinate;
 struct xy_coordinate
@@ -25,9 +26,9 @@ struct enemy_data
 };
 
 typedef struct main_friendly_ship main_ship;
-struct main_friendly_ship 
+struct main_friendly_ship
 {
-  coordinate *coord; 
+  coordinate *coord;
   int state;
   int life;
 };
@@ -52,7 +53,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   int y = ship->coord->y;
   int x = ship->coord->x;
 
-  int eShipCnt=1;
+  int eShipCnt=1, counter=0;
   int j1=0, j2=0, j3=0, j4=0, j5=0, j6=0;
   int fire1=0, fire2=0, fire3=0, fire4=0, fire5=0, fire6=0;
   int t1, u1, t2, u2, t3, u3, t4, u4, t5, u5, t6, u6;
@@ -67,37 +68,50 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   eShip.posX= (args->xmax)/2;
   myShip.posY = (args->ymax)-1;
   myShip.posX= (args->xmax)/2;
-  char direction = 'l';
+  char direction = 'r';
   printf("\033[%d;%dH", myShip.posY, myShip.posX);
   shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
   char missile=73;
+
+    LinkedList *shipList = initialization();
+
+    addShip(shipList);
+    addShip(shipList);
+    addShip(shipList);
+    addShip(shipList);
+    addShip(shipList);
+    addShip(shipList);
+    addShip(shipList);
+
   //printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
   while (1)
   {
     if (eShipCnt != 450) //Test - push P button to generate a new ship once destroyed
-    {    
-      if (eShipCnt>200)
+    {
+    counter++;
+      if (counter%8==0)
       {
-        eShipCnt=0;
-        if (direction == 'l')
-        {direction = 'r';}
-        else  
-        {direction = 'l';}
-      }
-      eShipCnt++;
-      if (eShipCnt%20 == 0)
-      {
-        if (direction == 'l')
+        if (eShipCnt+137>args->xmax)
         {
-          eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-          eShip.posX=eShip.posX-4;
-          diplayShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+          direction='l';
         }
-        if (direction == 'r')
+        if (eShipCnt<1)
         {
-          eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-          eShip.posX=eShip.posX+4;
-          diplayShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+          direction='r';
+        }
+
+        if (direction =='r')
+        {
+        eShipCnt++;
+        eraseList(shipList, fileSizeShip1, shipFile1);
+        displayList(shipList, fileSizeShip1, shipFile1, direction);
+        }
+
+        if (direction == 'l')
+        {
+        eShipCnt--;
+        eraseList(shipList, fileSizeShip1, shipFile1);
+        displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
       }
     }
@@ -106,20 +120,21 @@ void *keystrokeInstanceHandler(void* _threadArgs)
     {
       fireMissile(missile, t1-j1, u1);
       j1++;
-      if ((t1-j1)<(eShip.posY+shipHeight) && u1>eShip.posX && u1<(eShip.posX + 8))
+      if ((t1-j1)<(shipList->first->hitbox_Y+shipHeight) && u1>shipList->first->hitbox_X-8 && u1<shipList->first->hitbox_X)
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t1-j1, u1);  
+        // eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
+        // printf("\033[%d;%dH ", t1-j1, u1);
+        removeShip(shipList, fileSizeShip1, shipFile1, shipList->first->next->next->Y, shipList->first->next->next->X, 3);
         fire1=0;
         j1=0;
         eShipCnt=450;
-      }      
+      }
       if (j1> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t1-j1, u1);  
+        printf("\033[%d;%dH ", t1-j1, u1);
         fire1=0;
         j1=0;
-      }    
+      }
     }
       if (fire2==1)
     {
@@ -128,18 +143,18 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       if ((t2-j2)<(eShip.posY+shipHeight) && u2>eShip.posX && u2<(eShip.posX + 8))
       {
         eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t2-j2, u2);  
+        printf("\033[%d;%dH ", t2-j2, u2);
         fire2=0;
         j2=0;
         eShipCnt=450;
-      }  
+      }
       if (j2> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t2-j2, u2);  
+        printf("\033[%d;%dH ", t2-j2, u2);
         fire2=0;
         j2=0;
-      }    
-    }  
+      }
+    }
       if (fire3==1)
     {
       fireMissile(missile, t3-j3, u3);
@@ -147,14 +162,14 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       if ((t3-j3)<(eShip.posY+shipHeight) && u3>eShip.posX && u3<(eShip.posX + 8))
       {
         eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t3-j3, u3);  
+        printf("\033[%d;%dH ", t3-j3, u3);
         fire3=0;
         j3=0;
         eShipCnt=450;
-      }  
+      }
       if (j3> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t3-j3, u3);  
+        printf("\033[%d;%dH ", t3-j3, u3);
         fire3=0;
         j3=0;
       }
@@ -166,14 +181,14 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       if ((t4-j4)<(eShip.posY+shipHeight) && u4>eShip.posX && u4<(eShip.posX + 8))
       {
         eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t4-j4, u4);  
+        printf("\033[%d;%dH ", t4-j4, u4);
         fire4=0;
         j4=0;
         eShipCnt=450;
-      }  
+      }
       if (j4> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t4-j4, u4);  
+        printf("\033[%d;%dH ", t4-j4, u4);
         fire4=0;
         j4=0;
       }
@@ -185,17 +200,17 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       if ((t5-j5)<(eShip.posY+shipHeight) && u5>eShip.posX && u5<(eShip.posX + 8))
       {
         eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t5-j5, u5);  
+        printf("\033[%d;%dH ", t5-j5, u5);
         fire5=0;
         j5=0;
         eShipCnt=450;
-      }       
+      }
       if (j5> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t5-j5, u5);  
+        printf("\033[%d;%dH ", t5-j5, u5);
         fire5=0;
         j5=0;
-      }    
+      }
     }
     if (fire6==1)
     {
@@ -204,18 +219,18 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       if ((t6-j6)<(eShip.posY+shipHeight) && u6>eShip.posX && u6<(eShip.posX + 8))
       {
         eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t6-j6, u6);  
+        printf("\033[%d;%dH ", t6-j6, u6);
         fire6=0;
         j6=0;
         eShipCnt=450;
-      }  
+      }
       if (j6> (args->ymax)-shipHeight+2)
       {
-        printf("\033[%d;%dH ", t6-j6, u6);  
+        printf("\033[%d;%dH ", t6-j6, u6);
         fire6=0;
         j6=0;
       }
-    }    
+    }
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
       if (a != 0) //Ship movement
@@ -244,9 +259,14 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         //}
         if (a == 'p')
         {
-          eShipCnt=0;
+          removeShip(shipList, fileSizeShip1, shipFile1, shipList->first->next->next->Y, shipList->first->next->next->X, 3);
         }
-        
+
+        if (a == 'm')
+        {
+          eraseList(shipList, fileSizeShip1, shipFile1);
+        }
+
         if (a == 113)//Left - Q key
         {
           if ((myShip.posX-4)>0)  //Prevent moving over terminal limit
@@ -275,45 +295,45 @@ void *keystrokeInstanceHandler(void* _threadArgs)
             u1=myShip.posX+4;
             fire1=1;
             continue;
-          } 
+          }
           if (fire2==0)
           {
             t2=myShip.posY-1;
             u2=myShip.posX+4;
-            fire2=1; 
+            fire2=1;
             continue;
           }
           if (fire3==0)
           {
           t3=myShip.posY-1;
           u3=myShip.posX+4;
-          fire3=1; 
+          fire3=1;
           continue;
           }
           if (fire4==0)
           {
           t4=myShip.posY-1;
           u4=myShip.posX+4;
-          fire4=1; 
+          fire4=1;
           continue;
           }
           if (fire5==0)
           {
           t5=myShip.posY-1;
           u5=myShip.posX+4;
-          fire5=1; 
+          fire5=1;
           continue;
-          } 
+          }
           if (fire6==0)
           {
           t6=myShip.posY-1;
           u6=myShip.posX+4;
-          fire6=1; 
+          fire6=1;
           continue;
-          } 
+          }
         }
 
-        if (a == 27)//Quit - Escape 
+        if (a == 27)//Quit - Escape
         {
           *(args->isGameDone_ptr) = 1;
           return NULL;
@@ -344,7 +364,7 @@ int main(void){
   args_thread *args = (args_thread*)malloc(sizeof(args_thread));
   args->ship = (main_ship*)malloc(sizeof(main_ship));
   args->ship->coord = (coordinate*)malloc(sizeof(coordinate));
-  
+
   args->isGameDone_ptr = &isGameDone;
   args->xmax = xmax;
   args->ymax = ymax;
@@ -358,7 +378,7 @@ int main(void){
    if (*(args->isGameDone_ptr) == 1) {
        pthread_join(thread_id, NULL);
        break;
-    } 
+    }
     keyPressed=key_pressed();
     usleep(20000);
   }
