@@ -26,6 +26,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   myShip->coord->y = (args->ymax)-1;
 
   enemy *eShip = (enemy*)malloc(sizeof(enemy));
+  eShip->state = 0;
   eShip->coord = (coordinate*)malloc(sizeof(coordinate));
   eShip->coord->x = (args->xmax)/2;
   eShip->coord->y = 1;
@@ -35,23 +36,20 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   {
     fireChain[i] = (fireInst*)malloc(sizeof(fireInst));
     fireChain[i]->coord = (coordinate*)malloc(sizeof(coordinate));
-    fireChain[i]->relativePosY = 0;
     fireChain[i]->state = 0;
-
   }
 
   int shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
   int eShipCnt=1;
   char a;
   char direction = 'l';
-  int z =0;
-  
+
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
     if (eShipCnt != 450) //Test - push P button to generate a new ship once destroyed
     {    
-      if (eShipCnt>200)
+      if (eShipCnt>200) //TODO : optimisation relative a l'ecran.
       {
         eShipCnt=0;
         if (direction == 'l')
@@ -60,7 +58,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         {direction = 'l';}
       }
       eShipCnt++;
-      if (eShipCnt%20 == 0)
+      if (eShipCnt%20 == 0) //deplace le vaisseau une fois toutes les boucles multiple de 20
       {
         if (direction == 'l')
         {
@@ -76,8 +74,8 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         }
       }
     }
-    z++; //debug var
-    for (int i = 0; i <= MAX_MISSILES; i++)
+
+    for (int i = 0; i < MAX_MISSILES; i++)
     {
       if(fireChain[i]->state == 1)
       {
@@ -86,7 +84,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         if(fireChain[i]->relativePosY <= (eShip->coord->y + shipHeight) && (fireChain[i]->coord->x > eShip->coord->x && fireChain[i]->coord->x < (eShip->coord->x + 8)))
         {
           eraseShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
-          printf("\033[%d;%dH ", fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+          printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
           fireChain[i]->state = 0;
           eShipCnt=450;
         }
@@ -137,7 +135,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
               fireChain[i]->relativePosY = fireChain[i]->coord->y;
               fireChain[i]->coord->x = (myShip->coord->x)+4;
               fireChain[i]->state = 1;
-              continue;
+              break;
             }
           }
         }

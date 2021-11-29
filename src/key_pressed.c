@@ -26,5 +26,6 @@ return result;
 void fireMissile(int x, int y)
 {      
         printf("\033[%d;%dH%c ", y, x, 'I');
+        printf("\033[%d;%dH%c ", y+1, x, ' ');
         fflush(stdout);
 }
