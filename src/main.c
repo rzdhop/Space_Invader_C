@@ -73,6 +73,8 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
   char missile=73;
 
+  int totalShips=0;
+
     LinkedList *shipList = initialization();
 
     addShip(shipList);
@@ -86,7 +88,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   //printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
   while (1)
   {
-    if (eShipCnt != 450) //Test - push P button to generate a new ship once destroyed
+    if (eShipCnt != 600) //Test - push P button to generate a new ship once destroyed
     {
     counter++;
       if (counter%8==0)
@@ -104,30 +106,44 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         {
         eShipCnt++;
         eraseList(shipList, fileSizeShip1, shipFile1);
-        displayList(shipList, fileSizeShip1, shipFile1, direction);
+        totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
 
         if (direction == 'l')
         {
         eShipCnt--;
         eraseList(shipList, fileSizeShip1, shipFile1);
-        displayList(shipList, fileSizeShip1, shipFile1, direction);
+        totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
       }
     }
 
         if (fire1==1)
     {
+      int shipWidth=8;
+      int largeurTot = totalShips*shipWidth;
+      int departAgauche = (shipList->first->X - ((shipWidth-1)*largeurTot));
+      int elToDel=0;
       fireMissile(missile, t1-j1, u1);
       j1++;
-      if ((t1-j1)<(shipList->first->hitbox_Y+shipHeight) && u1>shipList->first->hitbox_X-8 && u1<shipList->first->hitbox_X)
+      if ((t1-j1)<(shipList->first->Y+shipHeight) && u1>departAgauche && u1<shipList->first->X+shipWidth)
       {
-        // eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        // printf("\033[%d;%dH ", t1-j1, u1);
-        removeShip(shipList, fileSizeShip1, shipFile1, shipList->first->next->next->Y, shipList->first->next->next->X, 3);
-        fire1=0;
-        j1=0;
-        eShipCnt=450;
+        Element *hitbox_X, *hitbox_Y, *test;
+        test=shipList->first;
+        for (int i=1; i < totalShips+1; i++)
+        {
+          hitbox_X=test->X;
+          hitbox_Y=test->Y;
+          if (u1>hitbox_X && u1<hitbox_X+8 && (t1-j1)<hitbox_Y)
+          {
+            elToDel = i;
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire1=0;
+            j1=0;
+            break;
+          }
+        test=test->next;
+        }
       }
       if (j1> (args->ymax)-shipHeight+2)
       {
@@ -259,7 +275,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         //}
         if (a == 'p')
         {
-          removeShip(shipList, fileSizeShip1, shipFile1, shipList->first->next->next->Y, shipList->first->next->next->X, 3);
+          removeShip(shipList, fileSizeShip1, shipFile1, 3);
         }
 
         if (a == 'm')

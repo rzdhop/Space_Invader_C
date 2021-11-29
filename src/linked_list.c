@@ -41,7 +41,7 @@ void addShip(LinkedList *list)
     list->first = nouveau;
 }
 
-void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int y, int x, int elementToDelete)
+void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int elementToDelete)
 {
     if (list == NULL)
     {
@@ -50,37 +50,74 @@ void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int y, int x
 
     if (list->first != NULL)
     {
-        eraseShip(fileSizeShip, shipFile, y, x);
+        int x, y;
         Element *toDelete;
         switch (elementToDelete)
         {
         case 1:
                 toDelete = list->first;
+                x=toDelete->X;
+                y=toDelete->Y;
                 list->first = list->first->next;
                 break;
         case 2:
                 toDelete = list->first->next;
+                x=toDelete->X;
+                y=toDelete->Y;
                 list->first->next = list->first->next->next;
                 break;
         case 3:            
                 toDelete = list->first->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
                 list->first->next->next = list->first->next->next->next;
+                break;
+        case 4:            
+                toDelete = list->first->next->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
+                list->first->next->next->next = list->first->next->next->next->next;
+                break;
+        case 5:            
+                toDelete = list->first->next->next->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
+                list->first->next->next->next->next = list->first->next->next->next->next->next->next;
+                break;
+        case 6:            
+                toDelete = list->first->next->next->next->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
+                list->first->next->next->next->next->next = list->first->next->next->next->next->next->next->next;
+                break;
+        case 7:            
+                toDelete = list->first->next->next->next->next->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
+                list->first->next->next->next->next->next->next = list->first->next->next->next->next->next->next->next->next;
+                break;
+        case 8:            
+                toDelete = list->first->next->next->next->next->next->next->next;
+                x=toDelete->X;
+                y=toDelete->Y;
+                list->first->next->next->next->next->next->next->next = list->first->next->next->next->next->next->next->next->next->next;
                 break;
         default:
                 break;
         }
-        
+        eraseShip(fileSizeShip, shipFile, y, x);
         free(toDelete);
     }
 }
 
-void displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
+int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
     if (list == NULL)
     {
         exit(EXIT_FAILURE);
     }
 
+    int numberOfShips=0;
     Element *current = list->first;
     while (current != NULL)
     {
@@ -93,8 +130,10 @@ void displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direct
         current->X+=2;
         }
         diplayShip(fileSizeShip, shipFile, current->Y, current->X);
+        numberOfShips++;
         current = current->next;
     }
+    return numberOfShips;
     printf("\n");
 }
 

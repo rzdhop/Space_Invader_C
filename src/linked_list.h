@@ -12,7 +12,7 @@ struct LinkedList
 };
 
 void eraseList(LinkedList *list, int fileSizeShip, char *shipFile);
-void displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction);
-void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int y, int x, int elementToDelete);
+int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction);
+void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int elementToDelete);
 void addShip(LinkedList *list);
 LinkedList *initialization();
