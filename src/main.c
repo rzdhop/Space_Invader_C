@@ -88,163 +88,216 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   //printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
   while (1)
   {
-    if (eShipCnt != 600) //Test - push P button to generate a new ship once destroyed
+
+    if (shipList->first != NULL)
     {
-    counter++;
-      if (counter%8==0)
+      counter++;
+      if (counter % 8 == 0)
       {
-        if (eShipCnt+137>args->xmax)
+        if (eShipCnt + 137 > args->xmax)
         {
-          direction='l';
+          direction = 'l';
         }
-        if (eShipCnt<1)
+        if (eShipCnt < 1)
         {
-          direction='r';
+          direction = 'r';
         }
 
-        if (direction =='r')
+        if (direction == 'r')
         {
-        eShipCnt++;
-        eraseList(shipList, fileSizeShip1, shipFile1);
-        totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
+          eShipCnt++;
+          eraseList(shipList, fileSizeShip1, shipFile1);
+          totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
 
         if (direction == 'l')
         {
-        eShipCnt--;
-        eraseList(shipList, fileSizeShip1, shipFile1);
-        totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
+          eShipCnt--;
+          eraseList(shipList, fileSizeShip1, shipFile1);
+          totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
       }
     }
 
-        if (fire1==1)
+    if (fire1 == 1)
     {
-      int shipWidth=8;
-      int largeurTot = totalShips*shipWidth;
-      int departAgauche = (shipList->first->X - ((shipWidth-1)*largeurTot));
-      int elToDel=0;
-      fireMissile(missile, t1-j1, u1);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t1 - j1, u1);
       j1++;
-      if ((t1-j1)<(shipList->first->Y+shipHeight) && u1>departAgauche && u1<shipList->first->X+shipWidth)
+      if ((t1 - j1) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        Element *hitbox_X, *hitbox_Y, *test;
-        test=shipList->first;
-        for (int i=1; i < totalShips+1; i++)
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
         {
-          hitbox_X=test->X;
-          hitbox_Y=test->Y;
-          if (u1>hitbox_X && u1<hitbox_X+8 && (t1-j1)<hitbox_Y)
+          if (u1 > test->X && u1 < test->X + 8 && (t1 - j1) < (test->Y + shipHeight))
           {
-            elToDel = i;
             removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire1=0;
-            j1=0;
+            fire1 = 0;
+            j1 = 0;
             break;
           }
-        test=test->next;
+          elToDel++;
+          test = test->next;
         }
       }
-      if (j1> (args->ymax)-shipHeight+2)
+      if (j1 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t1-j1, u1);
-        fire1=0;
-        j1=0;
+        printf("\033[%d;%dH ", t1 - j1, u1);
+        fire1 = 0;
+        j1 = 0;
       }
     }
-      if (fire2==1)
+
+    if (fire2 == 1)
     {
-      fireMissile(missile, t2-j2, u2);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t2 - j2, u2);
       j2++;
-      if ((t2-j2)<(eShip.posY+shipHeight) && u2>eShip.posX && u2<(eShip.posX + 8))
+      if ((t2 - j2) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t2-j2, u2);
-        fire2=0;
-        j2=0;
-        eShipCnt=450;
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
+        {
+          if (u2 > test->X && u2 < test->X + 8 && (t2 - j2) < (test->Y + shipHeight))
+          {
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire2 = 0;
+            j2 = 0;
+            break;
+          }
+          elToDel++;
+          test = test->next;
+        }
       }
-      if (j2> (args->ymax)-shipHeight+2)
+      if (j2 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t2-j2, u2);
-        fire2=0;
-        j2=0;
+        printf("\033[%d;%dH ", t2 - j2, u2);
+        fire2 = 0;
+        j2 = 0;
       }
     }
-      if (fire3==1)
+    if (fire3 == 1)
     {
-      fireMissile(missile, t3-j3, u3);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t3 - j3, u3);
       j3++;
-      if ((t3-j3)<(eShip.posY+shipHeight) && u3>eShip.posX && u3<(eShip.posX + 8))
+      if ((t3 - j3) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t3-j3, u3);
-        fire3=0;
-        j3=0;
-        eShipCnt=450;
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
+        {
+          if (u3 > test->X && u3 < test->X + 8 && (t3 - j3) < (test->Y + shipHeight))
+          {
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire3 = 0;
+            j3 = 0;
+            break;
+          }
+          elToDel++;
+          test = test->next;
+        }
       }
-      if (j3> (args->ymax)-shipHeight+2)
+      if (j3 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t3-j3, u3);
-        fire3=0;
-        j3=0;
+        printf("\033[%d;%dH ", t3 - j3, u3);
+        fire3 = 0;
+        j3 = 0;
       }
     }
-      if (fire4==1)
+    if (fire4 == 1)
     {
-      fireMissile(missile, t4-j4, u4);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t4 - j4, u4);
       j4++;
-      if ((t4-j4)<(eShip.posY+shipHeight) && u4>eShip.posX && u4<(eShip.posX + 8))
+      if ((t4 - j4) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t4-j4, u4);
-        fire4=0;
-        j4=0;
-        eShipCnt=450;
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
+        {
+          if (u4 > test->X && u4 < test->X + 8 && (t4 - j4) < (test->Y + shipHeight))
+          {
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire4 = 0;
+            j4 = 0;
+            break;
+          }
+          elToDel++;
+          test = test->next;
+        }
       }
-      if (j4> (args->ymax)-shipHeight+2)
+      if (j4 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t4-j4, u4);
-        fire4=0;
-        j4=0;
+        printf("\033[%d;%dH ", t4 - j4, u4);
+        fire4 = 0;
+        j4 = 0;
       }
     }
-      if (fire5==1)
+    if (fire5 == 1)
     {
-      fireMissile(missile, t5-j5, u5);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t5 - j5, u5);
       j5++;
-      if ((t5-j5)<(eShip.posY+shipHeight) && u5>eShip.posX && u5<(eShip.posX + 8))
+      if ((t5 - j5) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t5-j5, u5);
-        fire5=0;
-        j5=0;
-        eShipCnt=450;
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
+        {
+          if (u5 > test->X && u5 < test->X + 8 && (t5 - j5) < (test->Y + shipHeight))
+          {
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire5 = 0;
+            j5 = 0;
+            break;
+          }
+          elToDel++;
+          test = test->next;
+        }
       }
-      if (j5> (args->ymax)-shipHeight+2)
+      if (j5 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t5-j5, u5);
-        fire5=0;
-        j5=0;
+        printf("\033[%d;%dH ", t5 - j5, u5);
+        fire5 = 0;
+        j5 = 0;
       }
     }
-    if (fire6==1)
+    if (fire6 == 1)
     {
-      fireMissile(missile, t6-j6, u6);
+      int shipWidth = 8;
+      int elToDel = 1;
+      fireMissile(missile, t6 - j6, u6);
       j6++;
-      if ((t6-j6)<(eShip.posY+shipHeight) && u6>eShip.posX && u6<(eShip.posX + 8))
+      if ((t6 - j6) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
       {
-        eraseShip(fileSizeShip1, shipFile1, eShip.posY, eShip.posX);
-        printf("\033[%d;%dH ", t6-j6, u6);
-        fire6=0;
-        j6=0;
-        eShipCnt=450;
+        Element *test;
+        test = shipList->first;
+        while (test != NULL)
+        {
+          if (u6 > test->X && u6 < test->X + 8 && (t6 - j6) < (test->Y + shipHeight))
+          {
+            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
+            fire6 = 0;
+            j6 = 0;
+            break;
+          }
+          elToDel++;
+          test = test->next;
+        }
       }
-      if (j6> (args->ymax)-shipHeight+2)
+      if (j6 > (args->ymax) - shipHeight + 2)
       {
-        printf("\033[%d;%dH ", t6-j6, u6);
-        fire6=0;
-        j6=0;
+        printf("\033[%d;%dH ", t6 - j6, u6);
+        fire6 = 0;
+        j6 = 0;
       }
     }
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
@@ -275,7 +328,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         //}
         if (a == 'p')
         {
-          removeShip(shipList, fileSizeShip1, shipFile1, 3);
+          removeShip(shipList, fileSizeShip1, shipFile1, 2);
         }
 
         if (a == 'm')

@@ -50,61 +50,25 @@ void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int elementT
 
     if (list->first != NULL)
     {
+        Element *toDelete, *currentShip;
         int x, y;
-        Element *toDelete;
-        switch (elementToDelete)
+        if (elementToDelete == 1)
         {
-        case 1:
-                toDelete = list->first;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first = list->first->next;
-                break;
-        case 2:
-                toDelete = list->first->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next = list->first->next->next;
-                break;
-        case 3:            
-                toDelete = list->first->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next = list->first->next->next->next;
-                break;
-        case 4:            
-                toDelete = list->first->next->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next->next = list->first->next->next->next->next;
-                break;
-        case 5:            
-                toDelete = list->first->next->next->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next->next->next = list->first->next->next->next->next->next->next;
-                break;
-        case 6:            
-                toDelete = list->first->next->next->next->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next->next->next->next = list->first->next->next->next->next->next->next->next;
-                break;
-        case 7:            
-                toDelete = list->first->next->next->next->next->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next->next->next->next->next = list->first->next->next->next->next->next->next->next->next;
-                break;
-        case 8:            
-                toDelete = list->first->next->next->next->next->next->next->next;
-                x=toDelete->X;
-                y=toDelete->Y;
-                list->first->next->next->next->next->next->next->next = list->first->next->next->next->next->next->next->next->next->next;
-                break;
-        default:
-                break;
+            toDelete = list->first;
+            list->first = list->first->next;
         }
+        else
+        {
+            currentShip = list->first;
+            for (int i = 1; i < elementToDelete - 1; i++) //Start at 1 because the first ship is already counted with list->first the line before
+            {
+                currentShip = currentShip->next;
+            }
+            toDelete = currentShip->next;
+            currentShip->next = currentShip->next->next;
+        }
+        y = toDelete->Y;
+        x = toDelete->X;
         eraseShip(fileSizeShip, shipFile, y, x);
         free(toDelete);
     }
