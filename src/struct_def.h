@@ -15,7 +15,6 @@ enum keystroke
   SPAWN = 112, //P
   QUIT = 27, //ESC
 };
-//struct keystroke mouv = {.LEFT=113, .RIGHT=100, .FIRE=32, .SPAWN=112,  .QUIT=27};
 
 typedef struct fireShotInstance fireInst;
 struct fireShotInstance 
@@ -28,8 +27,11 @@ struct fireShotInstance
 typedef struct enemy_data enemy;
 struct enemy_data
 {
+  enemy *next;
+  coordinate *hitbox;
   coordinate *coord;
   int state;
+  int enemyID;
 };
 
 typedef struct main_friendly_ship main_ship;
@@ -56,6 +58,12 @@ struct globalEnvironnmentData //TODO
   int eShipCnt;
   int ymax;
   int xmax;
+};
+
+typedef struct LinkedList LinkedList;
+struct LinkedList
+{
+    enemy *maille;
 };
 
 char *GetShip(char *fileName, int *fileSizePTR);

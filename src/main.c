@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include "struct_def.h"
 #include "key_pressed.h"
+#include "linked_list.h"
 
 //coord 0:0 => en haut a gauche
 #define MAX_MISSILES 6
@@ -16,17 +17,22 @@
 void *keystrokeInstanceHandler(void* _threadArgs)
 {
   args_thread *args = (args_thread*) _threadArgs;
+  LinkedList *shipList = initialization();
+  LinkedList *saveTheMailleTemp;
+  int nbEnemyToSpawn = 10, listsizeTotal = shipList->maille->hitbox->x;
 
-  int fileSizeShip1;//,fileSizeShip2;
+  int counter =0;
+
+  int fileSizeShip1, fileSizeShip2;
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
-  //char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
+  char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
 
   main_ship *myShip = args->ship;
   myShip->coord->x = (args->xmax)/2;
   myShip->coord->y = (args->ymax)-1;
 
   enemy *eShip = (enemy*)malloc(sizeof(enemy));
-  eShip->state = 0;
+  eShip->state = 1;
   eShip->coord = (coordinate*)malloc(sizeof(coordinate));
   eShip->coord->x = (args->xmax)/2;
   eShip->coord->y = 1;
@@ -44,56 +50,80 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   char a;
   char direction = 'l';
 
+  for (int i=0; i < nbEnemyToSpawn; i++)
+  {
+    addShip(shipList);
+    listsizeTotal += (shipList->maille->hitbox->x - shipList->maille->coord->x);
+    shipList->maille->state = 1;
+    shipList->maille->hitbox->y += shipHeight;
+  }
+
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
-    if (eShipCnt != 450) //Test - push P button to generate a new ship once destroyed
-    {    
-      if (eShipCnt>200) //TODO : optimisation relative a l'ecran.
+    if (shipList->maille != NULL)
+    {
+      counter++;
+      if (counter == 8)
       {
-        eShipCnt=0;
-        if (direction == 'l')
-        {direction = 'r';}
-        else  
-        {direction = 'l';}
-      }
-      eShipCnt++;
-      if (eShipCnt%20 == 0) //deplace le vaisseau une fois toutes les boucles multiple de 20
-      {
-        if (direction == 'l')
+        counter = 0;
+        if (eShipCnt + listsizeTotal > args->xmax-listsizeTotal/2 -15) //solution temporaire
         {
-          eraseShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
-          eShip->coord->x=eShip->coord->x-4;
-          diplayShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
+          direction = 'l';
+        }
+        if (eShipCnt < 1)
+        { 
+
+          direction = 'r';
         }
         if (direction == 'r')
         {
-          eraseShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
-          eShip->coord->x=eShip->coord->x+4;
-          diplayShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
+          eShipCnt++;//relative coordinate %8
+          eraseList(shipList, fileSizeShip1, shipFile1);
+          displayList(shipList, fileSizeShip1, shipFile1, direction);
+        }
+
+        if (direction == 'l')
+        {
+          eShipCnt--;
+          eraseList(shipList, fileSizeShip1, shipFile1);
+          displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
       }
     }
-
-    for (int i = 0; i < MAX_MISSILES; i++)
+    enemy *current = shipList->maille;
+    int tempflag = 0;
+    while(current != NULL)
     {
-      if(fireChain[i]->state == 1)
+      for (int i = 0; i < MAX_MISSILES; i++)
       {
-        fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
-        fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
-        if(fireChain[i]->relativePosY <= (eShip->coord->y + shipHeight) && (fireChain[i]->coord->x > eShip->coord->x && fireChain[i]->coord->x < (eShip->coord->x + 8)))
+        if(fireChain[i]->state == 1)
         {
-          eraseShip(fileSizeShip1, shipFile1, eShip->coord->y, eShip->coord->x);
-          printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
-          fireChain[i]->state = 0;
-          eShipCnt=450;
+            if(!tempflag)
+            {
+              fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
+              fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
+            }
+            if(fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
+            {
+              if(current->state)
+              {
+                removeShip(shipList, fileSizeShip1, shipFile1, current->enemyID);
+                printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
+                fireChain[i]->state = 0;
+                break;
+              }
+            }
+            if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
+            {
+              printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+              fireChain[i]->state = 0;
+              break;
+            } 
         }
-        if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
-        {
-          printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
-          fireChain[i]->state = 0;
-        }    
       }
+      tempflag = 1;
+      current = current->next;
     }
 
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
@@ -104,7 +134,6 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         {
           eShipCnt=0;
         }
-        
         if (a == LEFT)
         {
           if ((myShip->coord->x-4)>0)  //Prevent moving over terminal limit
