@@ -13,7 +13,21 @@ enum keystroke
   RIGHT = 100, //D
   FIRE = 32, //SPACE
   SPAWN = 112, //P
-  QUIT = 27, //ESC
+  UP = 122, //z
+  DOWN = 115, //s
+  QUIT = 27 //ESC
+};
+
+enum gameType
+{
+  EASY = 1,
+  NORMAL = 2,
+  IMPOSSIBLE = 3
+};
+typedef struct GameTypePos GameTypePos;
+struct GameTypePos
+{
+  coordinate coord;
 };
 
 typedef struct fireShotInstance fireInst;
@@ -55,8 +69,8 @@ struct linkedMalloc
 };
 
 
-typedef struct args_struct_thread args_thread;
-struct args_struct_thread
+typedef struct Env Env;
+struct Env
 {
   linkedMalloc *list2free;
   main_ship *ship;
@@ -64,6 +78,8 @@ struct args_struct_thread
   int xmax;
   int ymax;
   int *isGameDone_ptr;
+  int nbEnemy;
+  int nbMissiles;
   
 };
 

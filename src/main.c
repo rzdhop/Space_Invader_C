@@ -11,17 +11,18 @@
 #include "struct_def.h"
 #include "key_pressed.h"
 #include "linked_list.h"
+#include "menu.h"
 //detect leak
-#include "leakdetector/leak_detector_c.h"
+//#include "leakdetector/leak_detector_c.h"
 
 //coord 0:0 => en haut a gauche
 #define MAX_MISSILES 6
 
-void *keystrokeInstanceHandler(void* _threadArgs)
+void *Game(void* _threadArgs)
 {
-  args_thread *args = (args_thread*) _threadArgs;
+  Env *args = (Env*) _threadArgs;
   LinkedList *shipList = initialization(args->list2free);
-  int nbEnemyToSpawn = 5, listsizeTotal = shipList->top->hitbox->x;
+  int nbEnemyToSpawn = 10, listsizeTotal = shipList->top->hitbox->x;
 
   int counter = 0;
   int enemyID = 1;
@@ -184,6 +185,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
 
 int main(void){
   char keyPressed;
+  int gameType= 0;
   system("clear");
   printf("\e[?25l"); //hide the terminal cursor
 
@@ -200,7 +202,7 @@ int main(void){
 
   pthread_t thread_id;
 
-  args_thread *args = (args_thread*)malloc(sizeof(args_thread));
+  Env *args = (Env*)malloc(sizeof(Env));
   args->list2free = (linkedMalloc*)malloc(sizeof(linkedMalloc));
   args->ship = (main_ship*)malloc(sizeof(main_ship));
   args->ship->coord = (coordinate*)malloc(sizeof(coordinate));
@@ -209,8 +211,33 @@ int main(void){
   args->xmax = xmax;
   args->ymax = ymax;
   args->keyPressed = &keyPressed;
+  //print menu
+  gameType = menu_instance(args);
+  switch (gameType)
+  {
+    case EASY:
+      args->nbEnemy = 2;
+      args->nbMissiles = 6;
+      break;
+    case NORMAL:
+      args->nbEnemy = 5;
+      args->nbMissiles = 6;
+      break;
+    case IMPOSSIBLE:
+      args->nbEnemy = 10;
+      args->nbMissiles = 6;
+      break;
+    case QUIT:
+      system("reset");
+      free(args);
+      exit(0);
+      break;
 
-  pthread_create(&thread_id, NULL, keystrokeInstanceHandler, (void*)args);
+    default:
+      break;
+  }
+  pthread_create(&thread_id, NULL, Game, (void*)args);
+
   while (1)
   {
    if (*(args->isGameDone_ptr) == 1) {
@@ -222,7 +249,7 @@ int main(void){
   }
   freeRegistered(args->list2free);
   free(args);
-  atexit(report_mem_leak);
+  //atexit(report_mem_leak);
   system("clear");
   system("reset");
   return 0;
