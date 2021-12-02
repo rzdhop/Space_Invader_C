@@ -3,20 +3,20 @@
 #include "linked_list.h"
 #include "struct_def.h"
 
-LinkedList *initialization()
+LinkedList *initialization(linkedMalloc *list2Free)
 {
     LinkedList *list = malloc(sizeof(LinkedList));
+    registerFree(list2Free, list);
     enemy *firstElement = malloc(sizeof(enemy));
     firstElement->coord = malloc(sizeof(coordinate));
     firstElement->hitbox = malloc(sizeof(coordinate));
-
+    firstElement->ID = 1;
     firstElement->coord->y = 1;
     firstElement->coord->x = 4;
-    firstElement->enemyID = 1;
     firstElement->hitbox->x = firstElement->coord->x+8;
     firstElement->hitbox->y = firstElement->coord->y+1;
     firstElement->next = NULL;
-    list->maille = firstElement;
+    list->top = firstElement;
 
     return list;
 }
@@ -27,67 +27,73 @@ void addShip(LinkedList *list)
     enemy *nouveau = malloc(sizeof(enemy));
     nouveau->coord = malloc(sizeof(coordinate));
     nouveau->hitbox = malloc(sizeof(coordinate));
-    
-    nouveau->coord->x = list->maille->coord->x+10;
-    nouveau->coord->y = list->maille->coord->y;
-    nouveau->enemyID = list->maille->enemyID+1;
+    nouveau->ID = list->top->ID+1; 
+    nouveau->coord->x = list->top->coord->x+10;
+    nouveau->coord->y = list->top->coord->y;
     nouveau->hitbox->x = nouveau->coord->x+8;
-    nouveau->hitbox->y = list->maille->coord->y;
+    nouveau->hitbox->y = list->top->coord->y;
 
     // Insertion de l'élément au début de la list 
-    nouveau->next = list->maille; //Le prochain de nouveau est l'ancienne maille actuel
-    list->maille = nouveau; //la maille actuel est nouveau 
+    nouveau->next = list->top; 
+    list->top = nouveau; //la maille de debut est nouveau  
 }
 
 void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID)
 {
-    enemy *toDelete, *current = list->maille;
-
-    while (current != NULL)
+    if(list == NULL)return;
+    if (list->top != NULL)
     {
-        if(current->enemyID == enemyID)
+        enemy *toDelete, *current = list->top;
+        if (enemyID == 1)
         {
-            toDelete = current;
-            break;
+            toDelete = list->top;
+            list->top = list->top->next;
         }
-        current = current->next;
+        else
+        {
+            current = list->top;
+            for (int i = 1; i < enemyID-1 ; i++) 
+            {
+                current = current->next;
+            }
+            toDelete = current->next;
+            current->next = current->next->next; //remplace la maille supprimé par celle d'apres.
+        }
+        eraseShip(fileSizeShip, shipFile, toDelete->coord->y, toDelete->coord->x);
+        free(toDelete);
     }
     
-    eraseShip(fileSizeShip, shipFile, toDelete->coord->x, toDelete->coord->y);
-    toDelete->state = 0;
 }
 
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
+    if(list==NULL)return;
     int numberOfShips=0;
-    enemy *current = list->maille;
+    enemy *current = list->top;
 
     while (current != NULL)
     {
-        if(current->state)
+        if (direction == 'l')
         {
-            if (direction == 'l')
-            {
-                current->coord->x -= 2;
-                current->hitbox->x -= 2;
-            }
-            else
-            {
-                current->coord->x += 2;
-                current->hitbox->x += 2;
-            }
-            diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x);
+            current->coord->x -= 2;
+            current->hitbox->x -= 2;
         }
+        else
+        {
+            current->coord->x += 2;
+            current->hitbox->x += 2;
+        }
+        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x);
         numberOfShips++; 
         current = current->next;
     }
     return numberOfShips;
-    printf("\n");
 }
 
 void eraseList(LinkedList *list, int fileSizeShip, char *shipFile)
 {
-    enemy *current = list->maille;
+    if (list == NULL)exit(EXIT_FAILURE);
+    enemy *current = list->top;
     while (current != NULL)
     {
         eraseShip(fileSizeShip, shipFile, current->coord->y, current->coord->x);

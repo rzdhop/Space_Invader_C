@@ -4,12 +4,15 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <malloc.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
 #include "struct_def.h"
 #include "key_pressed.h"
 #include "linked_list.h"
+//detect leak
+#include "leakdetector/leak_detector_c.h"
 
 //coord 0:0 => en haut a gauche
 #define MAX_MISSILES 6
@@ -17,11 +20,11 @@
 void *keystrokeInstanceHandler(void* _threadArgs)
 {
   args_thread *args = (args_thread*) _threadArgs;
-  LinkedList *shipList = initialization();
-  LinkedList *saveTheMailleTemp;
-  int nbEnemyToSpawn = 10, listsizeTotal = shipList->maille->hitbox->x;
+  LinkedList *shipList = initialization(args->list2free);
+  int nbEnemyToSpawn = 5, listsizeTotal = shipList->top->hitbox->x;
 
-  int counter =0;
+  int counter = 0;
+  int enemyID = 1;
 
   int fileSizeShip1, fileSizeShip2;
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
@@ -31,16 +34,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   myShip->coord->x = (args->xmax)/2;
   myShip->coord->y = (args->ymax)-1;
 
-  enemy *eShip = (enemy*)malloc(sizeof(enemy));
-  eShip->state = 1;
-  eShip->coord = (coordinate*)malloc(sizeof(coordinate));
-  eShip->coord->x = (args->xmax)/2;
-  eShip->coord->y = 1;
-
   fireInst *fireChain[MAX_MISSILES];
   for (int i = 0; i < MAX_MISSILES; i++)
   {
     fireChain[i] = (fireInst*)malloc(sizeof(fireInst));
+    registerFree(args->list2free, fireChain[i]);
     fireChain[i]->coord = (coordinate*)malloc(sizeof(coordinate));
     fireChain[i]->state = 0;
   }
@@ -53,21 +51,20 @@ void *keystrokeInstanceHandler(void* _threadArgs)
   for (int i=0; i < nbEnemyToSpawn; i++)
   {
     addShip(shipList);
-    listsizeTotal += (shipList->maille->hitbox->x - shipList->maille->coord->x);
-    shipList->maille->state = 1;
-    shipList->maille->hitbox->y += shipHeight;
+    listsizeTotal += (shipList->top->hitbox->x - shipList->top->coord->x);
+    shipList->top->hitbox->y += shipHeight;
   }
 
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
-    if (shipList->maille != NULL)
+    if (shipList->top != NULL)
     {
       counter++;
       if (counter == 8)
       {
         counter = 0;
-        if (eShipCnt + listsizeTotal > args->xmax-listsizeTotal/2 -15) //solution temporaire
+        if (eShipCnt + listsizeTotal > args->xmax-listsizeTotal/2) //solution temporaire
         {
           direction = 'l';
         }
@@ -91,40 +88,42 @@ void *keystrokeInstanceHandler(void* _threadArgs)
         }
       }
     }
-    enemy *current = shipList->maille;
-    int tempflag = 0;
-    while(current != NULL)
+
+    for (int i = 0; i < MAX_MISSILES; i++)
     {
-      for (int i = 0; i < MAX_MISSILES; i++)
+      if(fireChain[i]->state == 1)
       {
-        if(fireChain[i]->state == 1)
+        enemyID = 1;
+        if(shipList->top != NULL && fireChain[i]->relativePosY - fireChain[i]->coord->y < 15)
         {
-            if(!tempflag)
-            {
-              fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
-              fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
-            }
+          fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
+          fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
+          enemy *current = shipList->top;
+          while (current != NULL)
+          {
             if(fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
             {
-              if(current->state)
-              {
-                removeShip(shipList, fileSizeShip1, shipFile1, current->enemyID);
-                printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
-                fireChain[i]->state = 0;
-                break;
-              }
-            }
-            if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
-            {
-              printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+              removeShip(shipList, fileSizeShip1, shipFile1, enemyID);
+              printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
               fireChain[i]->state = 0;
+              fireChain[i]->relativePosY = fireChain[i]->coord->y;
               break;
-            } 
-        }
+            }
+            enemyID++;
+            current = current->next;
+          }
+          
+          if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
+          {
+            printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+            fireChain[i]->state = 0;
+            fireChain[i]->relativePosY = fireChain[i]->coord->y;
+            break;
+          }
+        } 
       }
-      tempflag = 1;
-      current = current->next;
     }
+    
 
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
@@ -132,7 +131,11 @@ void *keystrokeInstanceHandler(void* _threadArgs)
       {
         if (a == SPAWN)
         {
-          eShipCnt=0;
+          removeShip(shipList, fileSizeShip1, shipFile1, 1);
+        }
+        if (a == 'm')
+        {
+          eraseList(shipList, fileSizeShip1, shipFile1);
         }
         if (a == LEFT)
         {
@@ -198,6 +201,7 @@ int main(void){
   pthread_t thread_id;
 
   args_thread *args = (args_thread*)malloc(sizeof(args_thread));
+  args->list2free = (linkedMalloc*)malloc(sizeof(linkedMalloc));
   args->ship = (main_ship*)malloc(sizeof(main_ship));
   args->ship->coord = (coordinate*)malloc(sizeof(coordinate));
   
@@ -216,6 +220,10 @@ int main(void){
     keyPressed=key_pressed();
     usleep(20000);
   }
+  freeRegistered(args->list2free);
+  free(args);
+  atexit(report_mem_leak);
+  system("clear");
   system("reset");
   return 0;
 }

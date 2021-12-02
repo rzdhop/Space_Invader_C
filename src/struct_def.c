@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include "struct_def.h"
 
 #define bool unsigned int 
 #define true 1
@@ -97,4 +98,33 @@ void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
   }
     printf("\n");
 }
+linkedMalloc *_iniFreeRegister(void *addr2Free)
+{
+  linkedMalloc *list = malloc(sizeof(linkedMalloc));
+  malloc2free *top = malloc(sizeof(malloc2free));
+  top->addr = addr2Free;
+  top->next = NULL;
 
+  return list;
+}
+void registerFree(linkedMalloc *list, void *addr2Free)
+{
+  malloc2free *newAddr = malloc(sizeof(malloc2free));
+  newAddr->addr = addr2Free;
+  newAddr->next = list->top;
+  list->top = newAddr;
+}
+void freeRegistered(linkedMalloc *list)
+{
+  malloc2free *current = list->top; 
+  malloc2free *freeMe;
+
+  while(current != NULL)
+  {
+    freeMe = current;
+    current = current->next;
+    if(freeMe->addr != NULL) free(freeMe);
+  }
+  free(list);
+  return;
+}
