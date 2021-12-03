@@ -21,14 +21,14 @@ LinkedList *initialization(linkedMalloc *list2Free)
     return list;
 }
 
-void addShip(LinkedList *list)
+void addShip(LinkedList *list, int shipWidth)
 {
     /* Création du nouvel élément */
     enemy *nouveau = malloc(sizeof(enemy));
     nouveau->coord = malloc(sizeof(coordinate));
     nouveau->hitbox = malloc(sizeof(coordinate));
-    nouveau->ID = list->top->ID+1; 
-    nouveau->coord->x = list->top->coord->x+10;
+    nouveau->ID = list->top->ID+1;
+    nouveau->coord->x = list->top->coord->x+(shipWidth+1);
     nouveau->coord->y = list->top->coord->y;
     nouveau->hitbox->x = nouveau->coord->x+8;
     nouveau->hitbox->y = list->top->coord->y;
@@ -68,7 +68,7 @@ void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID)
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
     if(list==NULL)return;
-    int numberOfShips=0;
+    int numberOfShips=0, garbageInt=0;
     enemy *current = list->top;
 
     while (current != NULL)
@@ -83,7 +83,7 @@ int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char directi
             current->coord->x += 2;
             current->hitbox->x += 2;
         }
-        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x);
+        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
         numberOfShips++; 
         current = current->next;
     }

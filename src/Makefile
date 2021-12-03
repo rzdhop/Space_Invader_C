@@ -1,6 +1,6 @@
-OBJS	= main.o struct_def.o key_pressed.o linked_list.o
-SOURCE	= main.c struct_def.c key_pressed.c linked_list.c
-HEADER	= struct_def.h key_pressed.h linked_list.h
+OBJS	= main.o struct_def.o key_pressed.o linked_list.o menu.o
+SOURCE	= main.c struct_def.c key_pressed.c linked_list.c menu.c
+HEADER	= struct_def.h key_pressed.h linked_list.h menu.h
 OUT	= SpaceInvaders
 CC	 = gcc
 FLAGS	 = -g -c -Wall
@@ -22,6 +22,8 @@ key_pressed.o: key_pressed.c
 linked_list.o: linked_list.c
 	$(CC) $(FLAGS) linked_list.c 
 
+menu.o: menu.c
+	$(CC) $(FLAGS) menu.c 
 
 clean:
 	rm -f $(OBJS) $(OUT)

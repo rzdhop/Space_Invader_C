@@ -44,14 +44,15 @@ void *Game(void* _threadArgs)
     fireChain[i]->state = 0;
   }
 
-  int shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
-  int eShipCnt=1;
+  system("clear");
+  int getShipWidth=0;
+  int shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
   char a;
-  char direction = 'l';
+  char direction = 'r';
 
   for (int i=0; i < nbEnemyToSpawn; i++)
   {
-    addShip(shipList);
+    addShip(shipList, getShipWidth);
     listsizeTotal += (shipList->top->hitbox->x - shipList->top->coord->x);
     shipList->top->hitbox->y += shipHeight;
   }
@@ -65,25 +66,23 @@ void *Game(void* _threadArgs)
       if (counter == 8)
       {
         counter = 0;
-        if (eShipCnt + listsizeTotal > args->xmax-listsizeTotal/2) //solution temporaire
+        if (shipList->top->hitbox->x > args->xmax) //solution temporaire
         {
           direction = 'l';
         }
-        if (eShipCnt < 1)
+        if ((shipList->top->hitbox->x - ((nbEnemyToSpawn+1)*(getShipWidth+1))) < 1)
         { 
 
           direction = 'r';
         }
         if (direction == 'r')
         {
-          eShipCnt++;//relative coordinate %8
           eraseList(shipList, fileSizeShip1, shipFile1);
           displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
 
         if (direction == 'l')
         {
-          eShipCnt--;
           eraseList(shipList, fileSizeShip1, shipFile1);
           displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
@@ -144,7 +143,7 @@ void *Game(void* _threadArgs)
           {
           eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
           myShip->coord->x=myShip->coord->x-4;
-          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
           continue;
           }
         }
@@ -154,7 +153,7 @@ void *Game(void* _threadArgs)
           {
           eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
           myShip->coord->x=myShip->coord->x+4;
-          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
           continue;
           }
         }

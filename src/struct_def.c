@@ -47,25 +47,36 @@ char *GetShip(char *fileName, int *fileSizePTR)
 
 }
 
-int diplayShip(int fileSizeShip, char *shipFile, int y, int x)
+int diplayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth)
 {
-int shipHeight=1;
-printf("\033[%d;%dH", y, x);
-  for(int i= 0, f=0; i< fileSizeShip; i++) 
+  int shipHeight = 1, shipWidth = 0, shipWidthCompare = 0;
+  printf("\033[%d;%dH", y, x);
+  for (int i = 0, f = 0; i < fileSizeShip; i++)
   {
     if (shipFile[i] == 10)
     {
+      if (shipWidthCompare > shipWidth)
+      {
+        shipWidth = shipWidthCompare;
+      }
+      shipWidthCompare = 0;
       shipHeight++;
       f++;
       printf("\n");
-      printf("\033[%d;%dH", y+f, x);
+      printf("\033[%d;%dH", y + f, x);
       i++;
     }
     printf("%c", shipFile[i]);
+    shipWidthCompare++;
   }
-    printf("\n");
-    return shipHeight;
-} 
+  if (shipWidthCompare > shipWidth)
+  {
+    shipWidth = shipWidthCompare;
+  }
+  *getShipWidth = shipWidth - 1; //-1 because the LF is counted in the width
+  printf("\n");
+  return shipHeight;
+}
 
 void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
 { 
