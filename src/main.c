@@ -17,8 +17,6 @@
 //#include "leakdetector/leak_detector_c.h"
 
 //coord 0:0 => en haut a gauche
-#define MAX_MISSILES 6
-#define MAX_ENEMIES_MISSILES 3
 
 void *Game(void* _threadArgs)
 {
@@ -28,6 +26,7 @@ void *Game(void* _threadArgs)
 
   int counter = 0;
   int enemyID = 1;
+  int nbFriendlyShipLives = args->nbFriendlyShipLives;
 
   int fileSizeShip1, fileSizeShip2;
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
@@ -37,8 +36,8 @@ void *Game(void* _threadArgs)
   myShip->coord->x = (args->xmax)/2;
   myShip->coord->y = (args->ymax)-1;
 
-  fireInst *fireChain[MAX_MISSILES];
-  for (int i = 0; i < MAX_MISSILES; i++)
+  fireInst *fireChain[args->nbMissiles];
+  for (int i = 0; i < args->nbMissiles; i++)
   {
     fireChain[i] = (fireInst*)malloc(sizeof(fireInst));
     registerFree(args->list2free, fireChain[i]);
@@ -59,8 +58,8 @@ void *Game(void* _threadArgs)
     shipList->top->hitbox->y += shipHeight;
   }
 
-  fireInst *fireChainEnemy[MAX_ENEMIES_MISSILES];
-  for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
+  fireInst *fireChainEnemy[args->nbEnemiesMissiles];
+  for (int i = 0; i < args->nbEnemiesMissiles; i++)
   {
   fireChainEnemy[i] = (fireInst *)malloc(sizeof(fireInst));
   registerFree(args->list2free, fireChainEnemy);
@@ -103,7 +102,7 @@ void *Game(void* _threadArgs)
       }
     }
 
-    for (int i = 0; i < MAX_MISSILES; i++)
+    for (int i = 0; i < args->nbMissiles ; i++)
     {
       if(fireChain[i]->state == 1)
       {
@@ -141,7 +140,7 @@ void *Game(void* _threadArgs)
 
     if (((rand() % (10 - 1 + 1)) + 1 == 2) && (shipList->top != NULL))
     {
-      for (int enemyFireAvailabiltyChecker = 0; enemyFireAvailabiltyChecker < MAX_ENEMIES_MISSILES; enemyFireAvailabiltyChecker++)
+      for (int enemyFireAvailabiltyChecker = 0; enemyFireAvailabiltyChecker < args->nbEnemiesMissiles; enemyFireAvailabiltyChecker++)
       {
         if (fireChainEnemy[enemyFireAvailabiltyChecker]->state == 0)
         {
@@ -155,18 +154,24 @@ void *Game(void* _threadArgs)
       }
     }
 
-for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
+for (int i = 0; i < args->nbEnemiesMissiles; i++)
 {
   if (fireChainEnemy[i]->state == 1)
   {
-    if (fireChainEnemy[i]->relativePosY < args->ymax)
+    if (fireChainEnemy[i]->relativePosY < args->ymax+shipHeight)
     {
       enemyFireMissile(fireChainEnemy[i]->coord->x, fireChainEnemy[i]->relativePosY);
       fireChainEnemy[i]->relativePosY = fireChainEnemy[i]->relativePosY + 1;
       if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getShipWidth)
       {
+        nbFriendlyShipLives--;
+        fireChainEnemy[i]->state = 0;
+        diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        if (nbFriendlyShipLives<1)
+        {
           *(args->isGameDone_ptr) = 1;
           return NULL; // change this to GAME OVER function
+        }
       }
     }
     else
@@ -176,8 +181,7 @@ for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
     }
   }
 }
-
-    usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
+    usleep(args->gameSpeed); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
       if (a != 0) //Ship movement
       {
@@ -190,7 +194,7 @@ for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
           eraseList(shipList, fileSizeShip1, shipFile1);
         }
         if (a == LEFT)
-        {
+        {         
           if ((myShip->coord->x-4)>0)  //Prevent moving over terminal limit
           {
             eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
@@ -200,7 +204,7 @@ for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
           }
         }
         if (a == RIGHT)
-        {
+        {          
           if ((myShip->coord->x+8)< args->xmax) //Prevent moving over terminal limit
           {
           eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
@@ -211,7 +215,7 @@ for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
         }
         if (a == FIRE)
         {
-          for (int i = 0; i < MAX_MISSILES; i++)
+          for (int i = 0; i < args->nbMissiles ; i++)
           {
             if (fireChain[i]->state == 0)
             {
@@ -269,14 +273,23 @@ int main(void){
     case EASY:
       args->nbEnemy = 2;
       args->nbMissiles = 6;
+      args->nbEnemiesMissiles = 2;
+      args->nbFriendlyShipLives = 3;
+      args->gameSpeed = 19000;
       break;
     case NORMAL:
       args->nbEnemy = 5;
-      args->nbMissiles = 6;
+      args->nbMissiles = 4;
+      args->nbEnemiesMissiles = 4;
+      args->nbFriendlyShipLives = 2;
+      args->gameSpeed = 17000;
       break;
     case IMPOSSIBLE:
       args->nbEnemy = 10;
-      args->nbMissiles = 6;
+      args->nbMissiles = 2;
+      args->nbEnemiesMissiles = 6;
+      args->nbFriendlyShipLives = 1;
+      args->gameSpeed = 15000;
       break;
     case QUIT:
       system("reset");

@@ -80,7 +80,9 @@ struct Env
   int *isGameDone_ptr;
   int nbEnemy;
   int nbMissiles;
-  
+  int nbEnemiesMissiles;
+  int nbFriendlyShipLives;
+  int gameSpeed;
 };
 
 typedef struct LinkedList LinkedList;
