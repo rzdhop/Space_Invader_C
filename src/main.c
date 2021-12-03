@@ -27,6 +27,7 @@ void *Game(void* _threadArgs)
   int counter = 0;
   int enemyID = 1;
   int nbFriendlyShipLives = args->nbFriendlyShipLives;
+  int protectedOnHit=0, protectedCounter=0, redON=0;
 
   int fileSizeShip1, fileSizeShip2;
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
@@ -47,7 +48,7 @@ void *Game(void* _threadArgs)
 
   system("clear");
   int getShipWidth=0;
-  int shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+  int shipHeight = displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
   char a;
   char direction = 'r';
 
@@ -72,6 +73,7 @@ void *Game(void* _threadArgs)
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
+    printf("\033[1;37m");
     if (shipList->top != NULL)
     {
       counter++;
@@ -162,11 +164,13 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
     {
       enemyFireMissile(fireChainEnemy[i]->coord->x, fireChainEnemy[i]->relativePosY);
       fireChainEnemy[i]->relativePosY = fireChainEnemy[i]->relativePosY + 1;
-      if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getShipWidth)
+      if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getShipWidth && protectedOnHit == 0)
       {
         nbFriendlyShipLives--;
         fireChainEnemy[i]->state = 0;
-        diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        printf("\033[%d;%dH ", fireChainEnemy[i]->relativePosY - 1, fireChainEnemy[i]->coord->x);
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        protectedOnHit=1;
         if (nbFriendlyShipLives<1)
         {
           *(args->isGameDone_ptr) = 1;
@@ -181,6 +185,43 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
     }
   }
 }
+
+  if (protectedOnHit!=0)
+  {
+    if (redON != 0)
+    {
+      printf("\033[1;31m");
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+    }
+    else
+    {
+      printf("\033[1;37m");
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+    }
+    if (protectedCounter % 20 == 0)
+    {
+      if (redON != 1)
+      {
+        redON = 1;
+        printf("\033[1;31m");
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      }
+      else
+      {
+        redON = 0;
+        printf("\033[1;37m");
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      }
+    }
+    protectedCounter++;
+    if (protectedCounter > 100)
+    {
+      printf("\033[1;37m");
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      protectedCounter=0;
+      protectedOnHit=0;
+    }
+  }
     usleep(args->gameSpeed); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
       if (a != 0) //Ship movement
@@ -199,18 +240,18 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
           {
             eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
             myShip->coord->x=myShip->coord->x-4;
-            diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
             continue;
           }
         }
         if (a == RIGHT)
-        {          
-          if ((myShip->coord->x+8)< args->xmax) //Prevent moving over terminal limit
+        {
+          if ((myShip->coord->x + 8) < args->xmax) //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
-          myShip->coord->x=myShip->coord->x+4;
-          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
-          continue;
+            eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+            myShip->coord->x = myShip->coord->x + 4;
+            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+            continue;
           }
         }
         if (a == FIRE)

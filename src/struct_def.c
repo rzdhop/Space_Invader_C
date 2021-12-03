@@ -47,7 +47,7 @@ char *GetShip(char *fileName, int *fileSizePTR)
 
 }
 
-int diplayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth)
+int displayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth)
 {
   int shipHeight = 1, shipWidth = 0, shipWidthCompare = 0;
   printf("\033[%d;%dH", y, x);

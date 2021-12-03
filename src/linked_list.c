@@ -83,7 +83,7 @@ int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char directi
             current->coord->x += 1;
             current->hitbox->x += 1;
         }
-        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
+        displayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
         numberOfShips++; 
         current = current->next;
     }

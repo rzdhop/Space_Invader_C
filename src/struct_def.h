@@ -92,7 +92,7 @@ struct LinkedList
 };
 
 char *GetShip(char *fileName, int *fileSizePTR);
-int diplayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth);
+int displayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth);
 void eraseShip (int fileSizeShip, char *shipFile, int y, int x);
 linkedMalloc *_iniFreeRegister(void *addr2Free);
 void registerFree(linkedMalloc *list, void *addr2Free);
