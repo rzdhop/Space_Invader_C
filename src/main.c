@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
+#include <time.h>
 #include "struct_def.h"
 #include "key_pressed.h"
 #include "linked_list.h"
@@ -17,6 +18,7 @@
 
 //coord 0:0 => en haut a gauche
 #define MAX_MISSILES 6
+#define MAX_ENEMIES_MISSILES 3
 
 void *Game(void* _threadArgs)
 {
@@ -57,20 +59,32 @@ void *Game(void* _threadArgs)
     shipList->top->hitbox->y += shipHeight;
   }
 
+  fireInst *fireChainEnemy[MAX_ENEMIES_MISSILES];
+  for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
+  {
+  fireChainEnemy[i] = (fireInst *)malloc(sizeof(fireInst));
+  registerFree(args->list2free, fireChainEnemy);
+  fireChainEnemy[i]->coord = (coordinate *)malloc(sizeof(coordinate));
+  fireChainEnemy[i]->state = 0;
+  }
+  srand(time(NULL));
+  int numberOfEnemiesFiring=0, numberOfEnemiesAlive=1;
+
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
     if (shipList->top != NULL)
     {
       counter++;
-      if (counter == 5)
+      if (counter == 2)
       {
         counter = 0;
         if (shipList->top->hitbox->x > args->xmax)
         {
           direction = 'l';
         }
-        enemy *lastOfLinkedList = getLastOfLinkedList(shipList);
+        enemy *lastOfLinkedList = getLastOfLinkedList(shipList, &numberOfEnemiesAlive);
+
         if (lastOfLinkedList->coord->x < 1)
         { 
           direction = 'r';
@@ -107,6 +121,7 @@ void *Game(void* _threadArgs)
               printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
               fireChain[i]->state = 0;
               fireChain[i]->relativePosY = fireChain[i]->coord->y;
+              numberOfEnemiesAlive--; //To avoid seg fault if the next random enemy ship to fire is the one just killed
               break;
             }
             enemyID++;
@@ -123,7 +138,44 @@ void *Game(void* _threadArgs)
         } 
       }
     }
-    
+
+    if (((rand() % (10 - 1 + 1)) + 1 == 2) && (shipList->top != NULL))
+    {
+      for (int enemyFireAvailabiltyChecker = 0; enemyFireAvailabiltyChecker < MAX_ENEMIES_MISSILES; enemyFireAvailabiltyChecker++)
+      {
+        if (fireChainEnemy[enemyFireAvailabiltyChecker]->state == 0)
+        {
+          int firingEnemyID = (rand() % (numberOfEnemiesAlive - 1 + 1)) + 1;
+          enemy *firingEnemy = getShipByID(shipList, firingEnemyID);
+          fireChainEnemy[enemyFireAvailabiltyChecker]->state = 1;
+          fireChainEnemy[enemyFireAvailabiltyChecker]->coord->x = firingEnemy->coord->x + 4;
+          fireChainEnemy[enemyFireAvailabiltyChecker]->relativePosY = (firingEnemy->coord->y) + shipHeight+1;
+          break;
+        }
+      }
+    }
+
+for (int i = 0; i < MAX_ENEMIES_MISSILES; i++)
+{
+  if (fireChainEnemy[i]->state == 1)
+  {
+    if (fireChainEnemy[i]->relativePosY < args->ymax)
+    {
+      enemyFireMissile(fireChainEnemy[i]->coord->x, fireChainEnemy[i]->relativePosY);
+      fireChainEnemy[i]->relativePosY = fireChainEnemy[i]->relativePosY + 1;
+      if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getShipWidth)
+      {
+          *(args->isGameDone_ptr) = 1;
+          return NULL; // change this to GAME OVER function
+      }
+    }
+    else
+    {
+      printf("\033[%d;%dH ", fireChainEnemy[i]->relativePosY - 1, fireChainEnemy[i]->coord->x);
+      fireChainEnemy[i]->state = 0;
+    }
+  }
+}
 
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
@@ -141,10 +193,10 @@ void *Game(void* _threadArgs)
         {
           if ((myShip->coord->x-4)>0)  //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
-          myShip->coord->x=myShip->coord->x-4;
-          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
-          continue;
+            eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+            myShip->coord->x=myShip->coord->x-4;
+            diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+            continue;
           }
         }
         if (a == RIGHT)
@@ -163,7 +215,7 @@ void *Game(void* _threadArgs)
           {
             if (fireChain[i]->state == 0)
             {
-              fireChain[i]->coord->y = (myShip->coord->y)-1;
+              fireChain[i]->coord->y = (myShip->coord->y)-2;
               fireChain[i]->relativePosY = fireChain[i]->coord->y;
               fireChain[i]->coord->x = (myShip->coord->x)+4;
               fireChain[i]->state = 1;
@@ -177,7 +229,7 @@ void *Game(void* _threadArgs)
           *(args->isGameDone_ptr) = 1;
           return NULL;
         }
-    }
+      }
   }
   return NULL;
 }

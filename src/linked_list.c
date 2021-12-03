@@ -75,13 +75,13 @@ int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char directi
     {
         if (direction == 'l')
         {
-            current->coord->x -= 2;
-            current->hitbox->x -= 2;
+            current->coord->x -= 1;
+            current->hitbox->x -= 1;
         }
         else
         {
-            current->coord->x += 2;
-            current->hitbox->x += 2;
+            current->coord->x += 1;
+            current->hitbox->x += 1;
         }
         diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
         numberOfShips++; 
@@ -102,12 +102,28 @@ void eraseList(LinkedList *list, int fileSizeShip, char *shipFile)
     printf("\n");
 }
 
-enemy* getLastOfLinkedList(LinkedList *list)
+enemy* getLastOfLinkedList(LinkedList *list, int *numberOfEnemiesAlive)
 {
     enemy *enemy = list->top;
+    int enemiesAlive=1;
     while (enemy->next != NULL)
     {
         enemy = enemy->next;
+        enemiesAlive++;
+    }
+    *numberOfEnemiesAlive = enemiesAlive;
+    return enemy;
+}
+
+enemy* getShipByID(LinkedList *list, int shipID)
+{
+    enemy *enemy = list->top;
+    if (shipID>1)
+    {
+       for (int i = 0; i < shipID-1; i++)
+       {
+           enemy = enemy->next;
+       }
     }
     return enemy;
 }
