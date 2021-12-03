@@ -101,3 +101,13 @@ void eraseList(LinkedList *list, int fileSizeShip, char *shipFile)
     }
     printf("\n");
 }
+
+enemy* getLastOfLinkedList(LinkedList *list)
+{
+    enemy *enemy = list->top;
+    while (enemy->next != NULL)
+    {
+        enemy = enemy->next;
+    }
+    return enemy;
+}

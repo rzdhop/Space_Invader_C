@@ -63,16 +63,16 @@ void *Game(void* _threadArgs)
     if (shipList->top != NULL)
     {
       counter++;
-      if (counter == 8)
+      if (counter == 5)
       {
         counter = 0;
-        if (shipList->top->hitbox->x > args->xmax) //solution temporaire
+        if (shipList->top->hitbox->x > args->xmax)
         {
           direction = 'l';
         }
-        if ((shipList->top->hitbox->x - ((nbEnemyToSpawn+1)*(getShipWidth+1))) < 1)
+        enemy *lastOfLinkedList = getLastOfLinkedList(shipList);
+        if (lastOfLinkedList->coord->x < 1)
         { 
-
           direction = 'r';
         }
         if (direction == 'r')
@@ -149,7 +149,7 @@ void *Game(void* _threadArgs)
         }
         if (a == RIGHT)
         {
-          if ((myShip->coord->x+4)< args->xmax) //Prevent moving over terminal limit
+          if ((myShip->coord->x+8)< args->xmax) //Prevent moving over terminal limit
           {
           eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
           myShip->coord->x=myShip->coord->x+4;
@@ -196,7 +196,7 @@ int main(void){
   struct winsize w;  //Struct to get Linux Terminal size
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   int ymax=w.ws_row-4;
-  int xmax=w.ws_col-7;
+  int xmax=w.ws_col-2;
   int isGameDone = 0;
 
   pthread_t thread_id;
