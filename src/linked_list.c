@@ -1,117 +1,102 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "linked_list.h"
+#include "struct_def.h"
 
-LinkedList *initialization()
+LinkedList *initialization(linkedMalloc *list2Free)
 {
-    LinkedList *list = malloc(sizeof(*list));
-    Element *element = malloc(sizeof(*element));
-
-    if (list == NULL || element == NULL)
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    element->Y = 1;
-    element->X = 4;
-    element->shipID = 1;
-    element->hitbox_X = element->X+8;
-    element->hitbox_Y = element->Y+1;
-    element->next = NULL;
-    list->first = element;
+    LinkedList *list = malloc(sizeof(LinkedList));
+    registerFree(list2Free, list);
+    enemy *firstElement = malloc(sizeof(enemy));
+    firstElement->coord = malloc(sizeof(coordinate));
+    firstElement->hitbox = malloc(sizeof(coordinate));
+    firstElement->ID = 1;
+    firstElement->coord->y = 1;
+    firstElement->coord->x = 4;
+    firstElement->hitbox->x = firstElement->coord->x+8;
+    firstElement->hitbox->y = firstElement->coord->y+1;
+    firstElement->next = NULL;
+    list->top = firstElement;
 
     return list;
 }
 
-void addShip(LinkedList *list)
+void addShip(LinkedList *list, int shipWidth)
 {
     /* Création du nouvel élément */
-    Element *nouveau = malloc(sizeof(*nouveau));
-    if (list == NULL || nouveau == NULL)
-    {
-        exit(EXIT_FAILURE);
-    }
-    nouveau->X = list->first->X + 10;
-    nouveau->Y = list->first->Y;
-    nouveau->shipID = list->first->shipID+1;
-    nouveau->hitbox_X = list->first->X+10;
-    nouveau->hitbox_Y = list->first->Y;
+    enemy *nouveau = malloc(sizeof(enemy));
+    nouveau->coord = malloc(sizeof(coordinate));
+    nouveau->hitbox = malloc(sizeof(coordinate));
+    nouveau->ID = list->top->ID+1;
+    nouveau->coord->x = list->top->coord->x+(shipWidth+1);
+    nouveau->coord->y = list->top->coord->y;
+    nouveau->hitbox->x = nouveau->coord->x+8;
+    nouveau->hitbox->y = list->top->coord->y;
 
-    /* Insertion de l'élément au début de la list */
-    nouveau->next = list->first;
-    list->first = nouveau;
+    // Insertion de l'élément au début de la list 
+    nouveau->next = list->top; 
+    list->top = nouveau; //la maille de debut est nouveau  
 }
 
-void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int elementToDelete)
+void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID)
 {
-    if (list == NULL)
+    if(list == NULL)return;
+    if (list->top != NULL)
     {
-        return;
-    }
-
-    if (list->first != NULL)
-    {
-        Element *toDelete, *currentShip;
-        int x, y;
-        if (elementToDelete == 1)
+        enemy *toDelete, *current = list->top;
+        if (enemyID == 1)
         {
-            toDelete = list->first;
-            list->first = list->first->next;
+            toDelete = list->top;
+            list->top = list->top->next;
         }
         else
         {
-            currentShip = list->first;
-            for (int i = 1; i < elementToDelete - 1; i++) //Start at 1 because the first ship is already counted with list->first the line before
+            current = list->top;
+            for (int i = 1; i < enemyID-1 ; i++) 
             {
-                currentShip = currentShip->next;
+                current = current->next;
             }
-            toDelete = currentShip->next;
-            currentShip->next = currentShip->next->next;
+            toDelete = current->next;
+            current->next = current->next->next; //remplace la maille supprimé par celle d'apres.
         }
-        y = toDelete->Y;
-        x = toDelete->X;
-        eraseShip(fileSizeShip, shipFile, y, x);
+        eraseShip(fileSizeShip, shipFile, toDelete->coord->y, toDelete->coord->x);
         free(toDelete);
     }
+    
 }
 
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
-    if (list == NULL)
-    {
-        exit(EXIT_FAILURE);
-    }
+    if(list==NULL)return;
+    int numberOfShips=0, garbageInt=0;
+    enemy *current = list->top;
 
-    int numberOfShips=0;
-    Element *current = list->first;
     while (current != NULL)
     {
         if (direction == 'l')
         {
-            current->X-=2;
+            current->coord->x -= 2;
+            current->hitbox->x -= 2;
         }
         else
         {
-        current->X+=2;
+            current->coord->x += 2;
+            current->hitbox->x += 2;
         }
-        diplayShip(fileSizeShip, shipFile, current->Y, current->X);
-        numberOfShips++;
+        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
+        numberOfShips++; 
         current = current->next;
     }
     return numberOfShips;
-    printf("\n");
 }
 
 void eraseList(LinkedList *list, int fileSizeShip, char *shipFile)
 {
-    if (list == NULL)
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    Element *current = list->first;
+    if (list == NULL)exit(EXIT_FAILURE);
+    enemy *current = list->top;
     while (current != NULL)
     {
-        eraseShip(fileSizeShip, shipFile, current->Y, current->X);
+        eraseShip(fileSizeShip, shipFile, current->coord->y, current->coord->x);
         current = current->next;
     }
     printf("\n");

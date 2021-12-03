@@ -1,2 +1,4 @@
+#include "struct_def.h"
+
 char key_pressed();
-void fireMissile(char missile, int y, int x);
+void fireMissile(int x, int y);

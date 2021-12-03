@@ -1,18 +1,7 @@
-typedef struct Element Element;
-struct Element
-{
-    int X, Y, shipID, hitbox_X, hitbox_Y;
-    Element *next;
-};
-
-typedef struct LinkedList LinkedList;
-struct LinkedList
-{
-    Element *first;
-};
+#include "struct_def.h"
 
 void eraseList(LinkedList *list, int fileSizeShip, char *shipFile);
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction);
-void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int elementToDelete);
-void addShip(LinkedList *list);
+void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID);
+void addShip(LinkedList *list, int shipWidth);
 LinkedList *initialization();

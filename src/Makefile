@@ -1,22 +1,32 @@
-all : PROJET EXECUTION
+OBJS	= main.o struct_def.o key_pressed.o linked_list.o menu.o
+SOURCE	= main.c struct_def.c key_pressed.c linked_list.c menu.c
+HEADER	= struct_def.h key_pressed.h linked_list.h menu.h
+OUT	= SpaceInvaders
+CC	 = gcc
+FLAGS	 = -g -c -Wall
+LFLAGS	 = -lpthread
 
-struct_def.o : struct_def.c struct_def.h
-	gcc -c -Wall struct_def.c struct_def.h
-	
-key_pressed.o : key_pressed.c key_pressed.h
-	gcc -c -Wall key_pressed.c key_pressed.h
+all: $(OBJS)
+	$(CC) -g $(OBJS) -o $(OUT) $(LFLAGS)
+	./$(OUT)       #######comment this line to avoid automatic RUN#######
 
-linked_list.o : linked_list.c linked_list.h
-	gcc -c -Wall linked_list.c linked_list.h
+main.o: main.c
+	$(CC) $(FLAGS) main.c 
 
-main.o : main.c
-	gcc -pthread -c -Wall main.c
+struct_def.o: struct_def.c
+	$(CC) $(FLAGS) struct_def.c 
 
-PROJET : main.o struct_def.o key_pressed.o linked_list.o
-	gcc -pthread -o PROJET main.o struct_def.o key_pressed.o linked_list.o
+key_pressed.o: key_pressed.c
+	$(CC) $(FLAGS) key_pressed.c 
 
-EXECUTION :
-	./PROJET
+linked_list.o: linked_list.c
+	$(CC) $(FLAGS) linked_list.c 
+
+menu.o: menu.c
+	$(CC) $(FLAGS) menu.c 
 
 clean:
-	rm  *.o
+	rm -f $(OBJS) $(OUT)
+
+#run: $(OUT)        #######to activate if the automatic RUN is disabled########
+#	./$(OUT)

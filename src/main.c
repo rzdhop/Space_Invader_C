@@ -4,405 +4,175 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <malloc.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <pthread.h>
 #include "struct_def.h"
 #include "key_pressed.h"
 #include "linked_list.h"
+#include "menu.h"
+//detect leak
+//#include "leakdetector/leak_detector_c.h"
 
-typedef struct xy_coordinate coordinate;
-struct xy_coordinate
+//coord 0:0 => en haut a gauche
+#define MAX_MISSILES 6
+
+void *Game(void* _threadArgs)
 {
-  int x;
-  int y;
-};
+  Env *args = (Env*) _threadArgs;
+  LinkedList *shipList = initialization(args->list2free);
+  int nbEnemyToSpawn = 10, listsizeTotal = shipList->top->hitbox->x;
 
-typedef struct enemy_data enemy;
-struct enemy_data
-{
-  coordinate coord;
-  int state;
-};
+  int counter = 0;
+  int enemyID = 1;
 
-typedef struct main_friendly_ship main_ship;
-struct main_friendly_ship
-{
-  coordinate *coord;
-  int state;
-  int life;
-};
-
-typedef struct args_struct_thread args_thread;
-struct args_struct_thread
-{
-  main_ship *ship;
-  char *keyPressed;
-  int xmax;
-  int ymax;
-  int *isGameDone_ptr;
-};
-
-void *keystrokeInstanceHandler(void* _threadArgs)
-{
-  args_thread *args = (args_thread*) _threadArgs;
-  int fileSizeShip1,fileSizeShip2;
-  int lastx=0, lasty=0;
-  main_ship *ship = args->ship;
-
-  int y = ship->coord->y;
-  int x = ship->coord->x;
-
-  int eShipCnt=1, counter=0;
-  int j1=0, j2=0, j3=0, j4=0, j5=0, j6=0;
-  int fire1=0, fire2=0, fire3=0, fire4=0, fire5=0, fire6=0;
-  int t1, u1, t2, u2, t3, u3, t4, u4, t5, u5, t6, u6;
-  char a=0;
-  int shipHeight=0;
-
+  int fileSizeShip1, fileSizeShip2;
   char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
   char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
-  fShip myShip;
-  fShip eShip;
-  eShip.posY=1;
-  eShip.posX= (args->xmax)/2;
-  myShip.posY = (args->ymax)-1;
-  myShip.posX= (args->xmax)/2;
+
+  main_ship *myShip = args->ship;
+  myShip->coord->x = (args->xmax)/2;
+  myShip->coord->y = (args->ymax)-1;
+
+  fireInst *fireChain[MAX_MISSILES];
+  for (int i = 0; i < MAX_MISSILES; i++)
+  {
+    fireChain[i] = (fireInst*)malloc(sizeof(fireInst));
+    registerFree(args->list2free, fireChain[i]);
+    fireChain[i]->coord = (coordinate*)malloc(sizeof(coordinate));
+    fireChain[i]->state = 0;
+  }
+
+  system("clear");
+  int getShipWidth=0;
+  int shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+  char a;
   char direction = 'r';
-  printf("\033[%d;%dH", myShip.posY, myShip.posX);
-  shipHeight = diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
-  char missile=73;
 
-  int totalShips=0;
+  for (int i=0; i < nbEnemyToSpawn; i++)
+  {
+    addShip(shipList, getShipWidth);
+    listsizeTotal += (shipList->top->hitbox->x - shipList->top->coord->x);
+    shipList->top->hitbox->y += shipHeight;
+  }
 
-    LinkedList *shipList = initialization();
-
-    addShip(shipList);
-    addShip(shipList);
-    addShip(shipList);
-    addShip(shipList);
-    addShip(shipList);
-    addShip(shipList);
-    addShip(shipList);
-
-  //printf("Terminal size y= %d; x= %d", args->ymax, args->xmax);
+  printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
-
-    if (shipList->first != NULL)
+    if (shipList->top != NULL)
     {
       counter++;
-      if (counter % 8 == 0)
+      if (counter == 8)
       {
-        if (eShipCnt + 137 > args->xmax)
+        counter = 0;
+        if (shipList->top->hitbox->x > args->xmax) //solution temporaire
         {
           direction = 'l';
         }
-        if (eShipCnt < 1)
-        {
+        if ((shipList->top->hitbox->x - ((nbEnemyToSpawn+1)*(getShipWidth+1))) < 1)
+        { 
+
           direction = 'r';
         }
-
         if (direction == 'r')
         {
-          eShipCnt++;
           eraseList(shipList, fileSizeShip1, shipFile1);
-          totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
+          displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
 
         if (direction == 'l')
         {
-          eShipCnt--;
           eraseList(shipList, fileSizeShip1, shipFile1);
-          totalShips = displayList(shipList, fileSizeShip1, shipFile1, direction);
+          displayList(shipList, fileSizeShip1, shipFile1, direction);
         }
       }
     }
 
-    if (fire1 == 1)
+    for (int i = 0; i < MAX_MISSILES; i++)
     {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t1 - j1, u1);
-      j1++;
-      if ((t1 - j1) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
+      if(fireChain[i]->state == 1)
       {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
+        enemyID = 1;
+        if(shipList->top != NULL && fireChain[i]->relativePosY - fireChain[i]->coord->y < 15)
         {
-          if (u1 > test->X && u1 < test->X + 8 && (t1 - j1) < (test->Y + shipHeight))
+          fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
+          fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
+          enemy *current = shipList->top;
+          while (current != NULL)
           {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire1 = 0;
-            j1 = 0;
+            if(fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
+            {
+              removeShip(shipList, fileSizeShip1, shipFile1, enemyID);
+              printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
+              fireChain[i]->state = 0;
+              fireChain[i]->relativePosY = fireChain[i]->coord->y;
+              break;
+            }
+            enemyID++;
+            current = current->next;
+          }
+          
+          if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
+          {
+            printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+            fireChain[i]->state = 0;
+            fireChain[i]->relativePosY = fireChain[i]->coord->y;
             break;
           }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j1 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t1 - j1, u1);
-        fire1 = 0;
-        j1 = 0;
+        } 
       }
     }
+    
 
-    if (fire2 == 1)
-    {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t2 - j2, u2);
-      j2++;
-      if ((t2 - j2) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
-      {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
-        {
-          if (u2 > test->X && u2 < test->X + 8 && (t2 - j2) < (test->Y + shipHeight))
-          {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire2 = 0;
-            j2 = 0;
-            break;
-          }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j2 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t2 - j2, u2);
-        fire2 = 0;
-        j2 = 0;
-      }
-    }
-    if (fire3 == 1)
-    {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t3 - j3, u3);
-      j3++;
-      if ((t3 - j3) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
-      {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
-        {
-          if (u3 > test->X && u3 < test->X + 8 && (t3 - j3) < (test->Y + shipHeight))
-          {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire3 = 0;
-            j3 = 0;
-            break;
-          }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j3 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t3 - j3, u3);
-        fire3 = 0;
-        j3 = 0;
-      }
-    }
-    if (fire4 == 1)
-    {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t4 - j4, u4);
-      j4++;
-      if ((t4 - j4) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
-      {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
-        {
-          if (u4 > test->X && u4 < test->X + 8 && (t4 - j4) < (test->Y + shipHeight))
-          {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire4 = 0;
-            j4 = 0;
-            break;
-          }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j4 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t4 - j4, u4);
-        fire4 = 0;
-        j4 = 0;
-      }
-    }
-    if (fire5 == 1)
-    {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t5 - j5, u5);
-      j5++;
-      if ((t5 - j5) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
-      {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
-        {
-          if (u5 > test->X && u5 < test->X + 8 && (t5 - j5) < (test->Y + shipHeight))
-          {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire5 = 0;
-            j5 = 0;
-            break;
-          }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j5 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t5 - j5, u5);
-        fire5 = 0;
-        j5 = 0;
-      }
-    }
-    if (fire6 == 1)
-    {
-      int shipWidth = 8;
-      int elToDel = 1;
-      fireMissile(missile, t6 - j6, u6);
-      j6++;
-      if ((t6 - j6) < 15 && shipList->first != NULL) //To do - instead of 15 put the height of the last enemy ship
-      {
-        Element *test;
-        test = shipList->first;
-        while (test != NULL)
-        {
-          if (u6 > test->X && u6 < test->X + 8 && (t6 - j6) < (test->Y + shipHeight))
-          {
-            removeShip(shipList, fileSizeShip1, shipFile1, elToDel);
-            fire6 = 0;
-            j6 = 0;
-            break;
-          }
-          elToDel++;
-          test = test->next;
-        }
-      }
-      if (j6 > (args->ymax) - shipHeight + 2)
-      {
-        printf("\033[%d;%dH ", t6 - j6, u6);
-        fire6 = 0;
-        j6 = 0;
-      }
-    }
     usleep(18000); //Missile speed - increase to lower speed / decrease to higher speed
     a=*(args->keyPressed);
       if (a != 0) //Ship movement
       {
-        //if (*(args->keyPressed) == 122)//Up - Z key
-        //{
-        //  if ((y-4)>0)
-        //  {
-        //  eraseShip(fileSizeShip1, shipFile1, y, x);
-        //  y=y-4;
-        //  printf("\033[%d;%dH", y, x);
-        //  diplayShip(fileSizeShip1, shipFile1, y, x);
-        //  printf("\033[%d;%dH", y, x);
-        //  }
-        //}
-        //if (*(args->keyPressed) == 115)//Down - S key
-        //{
-        //  if ((y+4)<ymax)
-        //  {
-        //  eraseShip(fileSizeShip1, shipFile1, y, x);
-        //  y=y+4;
-        //  printf("\033[%d;%dH", y, x);
-        //  diplayShip(fileSizeShip1, shipFile1, y, x);
-        //  printf("\033[%d;%dH", y, x);
-        //  }
-        //}
-        if (a == 'p')
+        if (a == SPAWN)
         {
-          removeShip(shipList, fileSizeShip1, shipFile1, 2);
+          removeShip(shipList, fileSizeShip1, shipFile1, 1);
         }
-
         if (a == 'm')
         {
           eraseList(shipList, fileSizeShip1, shipFile1);
         }
-
-        if (a == 113)//Left - Q key
+        if (a == LEFT)
         {
-          if ((myShip.posX-4)>0)  //Prevent moving over terminal limit
+          if ((myShip->coord->x-4)>0)  //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
-          myShip.posX=myShip.posX-4;
-          diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
+          eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+          myShip->coord->x=myShip->coord->x-4;
+          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
           continue;
           }
         }
-        if (a == 100)//Right - D key
+        if (a == RIGHT)
         {
-          if ((myShip.posX+4)< args->xmax) //Prevent moving over terminal limit
+          if ((myShip->coord->x+4)< args->xmax) //Prevent moving over terminal limit
           {
-          eraseShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
-          myShip.posX=myShip.posX+4;
-          diplayShip(fileSizeShip1, shipFile1, myShip.posY, myShip.posX);
+          eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
+          myShip->coord->x=myShip->coord->x+4;
+          diplayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
           continue;
           }
         }
-        if (a == 32)//Fire - Space key
+        if (a == FIRE)
         {
-          if (fire1==0)
+          for (int i = 0; i < MAX_MISSILES; i++)
           {
-            t1=myShip.posY-1;
-            u1=myShip.posX+4;
-            fire1=1;
-            continue;
-          }
-          if (fire2==0)
-          {
-            t2=myShip.posY-1;
-            u2=myShip.posX+4;
-            fire2=1;
-            continue;
-          }
-          if (fire3==0)
-          {
-          t3=myShip.posY-1;
-          u3=myShip.posX+4;
-          fire3=1;
-          continue;
-          }
-          if (fire4==0)
-          {
-          t4=myShip.posY-1;
-          u4=myShip.posX+4;
-          fire4=1;
-          continue;
-          }
-          if (fire5==0)
-          {
-          t5=myShip.posY-1;
-          u5=myShip.posX+4;
-          fire5=1;
-          continue;
-          }
-          if (fire6==0)
-          {
-          t6=myShip.posY-1;
-          u6=myShip.posX+4;
-          fire6=1;
-          continue;
+            if (fireChain[i]->state == 0)
+            {
+              fireChain[i]->coord->y = (myShip->coord->y)-1;
+              fireChain[i]->relativePosY = fireChain[i]->coord->y;
+              fireChain[i]->coord->x = (myShip->coord->x)+4;
+              fireChain[i]->state = 1;
+              break;
+            }
           }
         }
 
-        if (a == 27)//Quit - Escape
+        if (a == QUIT)
         {
           *(args->isGameDone_ptr) = 1;
           return NULL;
@@ -414,6 +184,7 @@ void *keystrokeInstanceHandler(void* _threadArgs)
 
 int main(void){
   char keyPressed;
+  int gameType= 0;
   system("clear");
   printf("\e[?25l"); //hide the terminal cursor
 
@@ -430,27 +201,55 @@ int main(void){
 
   pthread_t thread_id;
 
-  args_thread *args = (args_thread*)malloc(sizeof(args_thread));
+  Env *args = (Env*)malloc(sizeof(Env));
+  args->list2free = (linkedMalloc*)malloc(sizeof(linkedMalloc));
   args->ship = (main_ship*)malloc(sizeof(main_ship));
   args->ship->coord = (coordinate*)malloc(sizeof(coordinate));
-
+  
   args->isGameDone_ptr = &isGameDone;
   args->xmax = xmax;
   args->ymax = ymax;
-  args->ship->coord->y = ymax - 1;
-  args->ship->coord->x = xmax / 2;
   args->keyPressed = &keyPressed;
+  //print menu
+  gameType = menu_instance(args);
+  switch (gameType)
+  {
+    case EASY:
+      args->nbEnemy = 2;
+      args->nbMissiles = 6;
+      break;
+    case NORMAL:
+      args->nbEnemy = 5;
+      args->nbMissiles = 6;
+      break;
+    case IMPOSSIBLE:
+      args->nbEnemy = 10;
+      args->nbMissiles = 6;
+      break;
+    case QUIT:
+      system("reset");
+      free(args);
+      exit(0);
+      break;
 
-  pthread_create(&thread_id, NULL, keystrokeInstanceHandler, (void*)args);
+    default:
+      break;
+  }
+  pthread_create(&thread_id, NULL, Game, (void*)args);
+
   while (1)
   {
    if (*(args->isGameDone_ptr) == 1) {
        pthread_join(thread_id, NULL);
        break;
-    }
+    } 
     keyPressed=key_pressed();
     usleep(20000);
   }
+  freeRegistered(args->list2free);
+  free(args);
+  //atexit(report_mem_leak);
+  system("clear");
   system("reset");
   return 0;
 }

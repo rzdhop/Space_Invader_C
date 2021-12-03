@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include "struct_def.h"
 
 #define bool unsigned int 
 #define true 1
 #define false 0
+
 
 char *GetShip(char *fileName, int *fileSizePTR)
 {
@@ -45,25 +47,36 @@ char *GetShip(char *fileName, int *fileSizePTR)
 
 }
 
-int diplayShip(int fileSizeShip, char *shipFile, int y, int x)
+int diplayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth)
 {
-int shipHeight=1;
-printf("\033[%d;%dH", y, x);
-  for(int i= 0, f=0; i< fileSizeShip; i++) 
+  int shipHeight = 1, shipWidth = 0, shipWidthCompare = 0;
+  printf("\033[%d;%dH", y, x);
+  for (int i = 0, f = 0; i < fileSizeShip; i++)
   {
     if (shipFile[i] == 10)
     {
+      if (shipWidthCompare > shipWidth)
+      {
+        shipWidth = shipWidthCompare;
+      }
+      shipWidthCompare = 0;
       shipHeight++;
       f++;
       printf("\n");
-      printf("\033[%d;%dH", y+f, x);
+      printf("\033[%d;%dH", y + f, x);
       i++;
     }
     printf("%c", shipFile[i]);
+    shipWidthCompare++;
   }
-    printf("\n");
-    return shipHeight;
-} 
+  if (shipWidthCompare > shipWidth)
+  {
+    shipWidth = shipWidthCompare;
+  }
+  *getShipWidth = shipWidth - 1; //-1 because the LF is counted in the width
+  printf("\n");
+  return shipHeight;
+}
 
 void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
 { 
@@ -96,9 +109,33 @@ void eraseShip (int fileSizeShip, char *ShipFile, int y, int x)
   }
     printf("\n");
 }
-
-struct EnvData
+linkedMalloc *_iniFreeRegister(void *addr2Free)
 {
-    unsigned int terminalSize;
-    unsigned int difficulty;
-};
+  linkedMalloc *list = malloc(sizeof(linkedMalloc));
+  malloc2free *top = malloc(sizeof(malloc2free));
+  top->addr = addr2Free;
+  top->next = NULL;
+
+  return list;
+}
+void registerFree(linkedMalloc *list, void *addr2Free)
+{
+  malloc2free *newAddr = malloc(sizeof(malloc2free));
+  newAddr->addr = addr2Free;
+  newAddr->next = list->top;
+  list->top = newAddr;
+}
+void freeRegistered(linkedMalloc *list)
+{
+  malloc2free *current = list->top; 
+  malloc2free *freeMe;
+
+  while(current != NULL)
+  {
+    freeMe = current;
+    current = current->next;
+    if(freeMe->addr != NULL) free(freeMe);
+  }
+  free(list);
+  return;
+}
