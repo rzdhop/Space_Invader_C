@@ -73,7 +73,7 @@ int displayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidt
   {
     shipWidth = shipWidthCompare;
   }
-  *getShipWidth = shipWidth - 1; //-1 because the LF is counted in the width
+  *getShipWidth = shipWidth; //-1 because the LF is counted in the width
   printf("\n");
   return shipHeight;
 }

@@ -30,7 +30,7 @@ int menu_instance(Env *args)
     printf("\033[%d;%dH EASY MODE", easyMode.coord.y, easyMode.coord.x);
     printf("\033[%d;%dH NORMAL MODE", normalMode.coord.y, normalMode.coord.x);
     printf("\033[%d;%dH IMPOSSIBLE MODE", impossibleMode.coord.y, impossibleMode.coord.x);
-    printf("\033[%d;%dH 8==> ", cursor.coord.y, cursor.coord.x); //Position the cursor before to save it
+    printf("\033[%d;%dH ==> ", cursor.coord.y, cursor.coord.x); //Position the cursor before to save it
 
     while (1)
     {
@@ -67,7 +67,7 @@ int menu_instance(Env *args)
             else
             {
                 printf("\033[%d;%dH", cursor.coord.y, cursor.coord.x);
-                printf(" 8==> ");
+                printf(" ==> ");
             }
         }
         /*end of blinking code*/

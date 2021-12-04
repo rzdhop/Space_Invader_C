@@ -5,7 +5,7 @@
 #include "struct_def.h"
 #include "colors.h"
 
-LinkedList *initialization(linkedMalloc *list2Free)
+LinkedList *initialization(linkedMalloc *list2Free, int shipWidth, int shipHeight)
 {
     LinkedList *list = malloc(sizeof(LinkedList));
     registerFree(list2Free, list);
@@ -15,8 +15,8 @@ LinkedList *initialization(linkedMalloc *list2Free)
     firstElement->ID = 1;
     firstElement->coord->y = 1;
     firstElement->coord->x = 4;
-    firstElement->hitbox->x = firstElement->coord->x+8;
-    firstElement->hitbox->y = firstElement->coord->y+1;
+    firstElement->hitbox->x = firstElement->coord->x + shipWidth;
+    firstElement->hitbox->y = firstElement->coord->y + shipHeight - 1;
     firstElement->nbOfLives = 3;
     firstElement->next = NULL;
     list->top = firstElement;
@@ -33,8 +33,8 @@ void addShip(LinkedList *list, int shipWidth)
     nouveau->ID = list->top->ID+1;
     nouveau->coord->x = list->top->coord->x+(shipWidth+1);
     nouveau->coord->y = list->top->coord->y;
-    nouveau->hitbox->x = nouveau->coord->x+8;
-    nouveau->hitbox->y = list->top->coord->y;
+    nouveau->hitbox->x = list->top->hitbox->x + shipWidth + 1;
+    nouveau->hitbox->y = list->top->hitbox->y;
     nouveau->nbOfLives = 3;
 
     // Insertion de l'élément au début de la list 

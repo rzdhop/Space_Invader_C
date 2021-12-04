@@ -22,8 +22,7 @@
 void *Game(void* _threadArgs)
 {
   Env *args = (Env*) _threadArgs;
-  LinkedList *shipList = initialization(args->list2free);
-  int nbEnemyToSpawn = 10, listsizeTotal = shipList->top->hitbox->x;
+  int nbEnemyToSpawn = args->nbEnemy;
 
   int counter = 0;
   int enemyID = 1;
@@ -31,8 +30,8 @@ void *Game(void* _threadArgs)
   int protectedOnHit=0, protectedCounter=0, redON=0;
 
   int fileSizeShip1, fileSizeShip2;
-  char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/TestShip.txt", &fileSizeShip1);
-  char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/Enemy_MotherShip.txt", &fileSizeShip2);
+  char *shipFile1 = GetShip("../assets/Vaisseaux/ennemis/MyShip.txt", &fileSizeShip1);
+  char *shipFile2 = GetShip("../assets/Vaisseaux/ennemis/EnemyShip.txt", &fileSizeShip2);
 
   main_ship *myShip = args->ship;
   myShip->coord->x = (args->xmax)/2;
@@ -48,16 +47,18 @@ void *Game(void* _threadArgs)
   }
 
   system("clear");
-  int getShipWidth=0;
-  int shipHeight = displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+  int getMyShipWidth=0, getEnemyShipWidth;
+  int myShipHeight = displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
+  int enemyShipHeight = displayShip(fileSizeShip2, shipFile2, 5, 5, &getEnemyShipWidth);
+  eraseShip(fileSizeShip2, shipFile2, 5, 5);
   char a;
   char direction = 'r';
 
+  LinkedList *shipList = initialization(args->list2free, getEnemyShipWidth, enemyShipHeight);
+
   for (int i=0; i < nbEnemyToSpawn; i++)
   {
-    addShip(shipList, getShipWidth);
-    listsizeTotal += (shipList->top->hitbox->x - shipList->top->coord->x);
-    shipList->top->hitbox->y += shipHeight;
+    addShip(shipList, getEnemyShipWidth);
   }
 
   fireInst *fireChainEnemy[args->nbEnemiesMissiles];
@@ -71,14 +72,31 @@ void *Game(void* _threadArgs)
   srand(time(NULL));
   int numberOfEnemiesFiring=0, numberOfEnemiesAlive=1;
 
+  int starsTimer=0, posY[10], posX[10];
+
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
+    printf(YELLOW);
+
+    if (starsTimer % 120 == 0)
+    {
+      for (int i = 0; i < 10; i++)
+      {
+        printf("\033[%d;%dH ", posY[i], posX[i]);
+        posY[i] = ((rand() % (args->ymax - 1 + 1)) + 1);
+        posX[i] = ((rand() % (args->xmax - 1 + 1)) + 1);
+        printf("\033[%d;%dH*", posY[i], posX[i]);
+      }
+      starsTimer = 0;
+    }
+    starsTimer++;
     printf(WHITE);
+
     if (shipList->top != NULL)
     {
       counter++;
-      if (counter == 2)
+      if (counter == 10)
       {
         counter = 0;
         if (shipList->top->hitbox->x > args->xmax)
@@ -93,55 +111,52 @@ void *Game(void* _threadArgs)
         }
         if (direction == 'r')
         {
-          eraseList(shipList, fileSizeShip1, shipFile1);
-          displayList(shipList, fileSizeShip1, shipFile1, direction);
+          eraseList(shipList, fileSizeShip2, shipFile2);
+          displayList(shipList, fileSizeShip2, shipFile2, direction);
         }
 
         if (direction == 'l')
         {
-          eraseList(shipList, fileSizeShip1, shipFile1);
-          displayList(shipList, fileSizeShip1, shipFile1, direction);
+          eraseList(shipList, fileSizeShip2, shipFile2);
+          displayList(shipList, fileSizeShip2, shipFile2, direction);
         }
       }
     }
 
-    for (int i = 0; i < args->nbMissiles ; i++)
+    for (int i = 0; i < args->nbMissiles; i++)
     {
-      if(fireChain[i]->state == 1)
+      if (fireChain[i]->state == 1)
       {
         enemyID = 1;
-        if(shipList->top != NULL && fireChain[i]->relativePosY - fireChain[i]->coord->y < 15)
+        fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
+        fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
+        enemy *current = shipList->top;
+        while (current != NULL)
         {
-          fireMissile(fireChain[i]->coord->x, fireChain[i]->relativePosY);
-          fireChain[i]->relativePosY = fireChain[i]->relativePosY - 1;
-          enemy *current = shipList->top;
-          while (current != NULL)
+          if (fireChain[i]->relativePosY <= (current->hitbox->y - 1) && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
           {
-            if (fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
-            {
-              current->nbOfLives -= 1;
-              printf("\033[%d;%dH%c ", fireChain[i]->relativePosY + 1, fireChain[i]->coord->x, ' ');
-              fireChain[i]->state = 0;
-              fireChain[i]->relativePosY = fireChain[i]->coord->y;
-              if (current->nbOfLives < 1)
-              {
-                removeShip(shipList, fileSizeShip1, shipFile1, enemyID);
-                numberOfEnemiesAlive--; //To avoid seg fault if the next random enemy ship to fire is the one just killed
-              }
-              break;
-            }
-            enemyID++;
-            current = current->next;
-          }
-          
-          if ((fireChain[i]->coord->y - fireChain[i]->relativePosY) > (args->ymax)-shipHeight+2)
-          {
-            printf("\033[%d;%dH ",  fireChain[i]->relativePosY, fireChain[i]->coord->x);  
+            current->nbOfLives -= 1;
+            printf("\033[%d;%dH%c", fireChain[i]->relativePosY + 1, fireChain[i]->coord->x, ' ');
             fireChain[i]->state = 0;
             fireChain[i]->relativePosY = fireChain[i]->coord->y;
+            if (current->nbOfLives < 1)
+            {
+              removeShip(shipList, fileSizeShip2, shipFile2, enemyID);
+              numberOfEnemiesAlive--; //To avoid seg fault if the next random enemy ship to fire is the one just killed
+            }
             break;
           }
-        } 
+          enemyID++;
+          current = current->next;
+        }
+
+        if (fireChain[i]->relativePosY < 0)
+        {
+          printf("\033[%d;%dH ", fireChain[i]->relativePosY, fireChain[i]->coord->x);
+          fireChain[i]->state = 0;
+          fireChain[i]->relativePosY = fireChain[i]->coord->y;
+          break;
+        }
       }
     }
 
@@ -154,8 +169,8 @@ void *Game(void* _threadArgs)
           int firingEnemyID = (rand() % (numberOfEnemiesAlive - 1 + 1)) + 1;
           enemy *firingEnemy = getShipByID(shipList, firingEnemyID);
           fireChainEnemy[enemyFireAvailabiltyChecker]->state = 1;
-          fireChainEnemy[enemyFireAvailabiltyChecker]->coord->x = firingEnemy->coord->x + 4;
-          fireChainEnemy[enemyFireAvailabiltyChecker]->relativePosY = (firingEnemy->coord->y) + shipHeight+1;
+          fireChainEnemy[enemyFireAvailabiltyChecker]->coord->x = firingEnemy->coord->x + 6;
+          fireChainEnemy[enemyFireAvailabiltyChecker]->relativePosY = (firingEnemy->coord->y) + enemyShipHeight;
           break;
         }
       }
@@ -165,16 +180,16 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
 {
   if (fireChainEnemy[i]->state == 1)
   {
-    if (fireChainEnemy[i]->relativePosY < args->ymax+shipHeight)
+    if (fireChainEnemy[i]->relativePosY < args->ymax+myShipHeight)
     {
       enemyFireMissile(fireChainEnemy[i]->coord->x, fireChainEnemy[i]->relativePosY);
       fireChainEnemy[i]->relativePosY = fireChainEnemy[i]->relativePosY + 1;
-      if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getShipWidth && protectedOnHit == 0)
+      if (fireChainEnemy[i]->relativePosY > (args->ymax - 1) && fireChainEnemy[i]->coord->x > myShip->coord->x && fireChainEnemy[i]->coord->x < myShip->coord->x +getMyShipWidth && protectedOnHit == 0)
       {
         nbFriendlyShipLives--;
         fireChainEnemy[i]->state = 0;
         printf("\033[%d;%dH ", fireChainEnemy[i]->relativePosY - 1, fireChainEnemy[i]->coord->x);
-        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
         protectedOnHit=1;
         if (nbFriendlyShipLives<1)
         {
@@ -196,12 +211,12 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
     if (redON != 0)
     {
       printf(RED);
-      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
     }
     else
     {
       printf(WHITE);
-      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
     }
     if (protectedCounter % 20 == 0)
     {
@@ -209,20 +224,20 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
       {
         redON = 1;
         printf(RED);
-        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
       }
       else
       {
         redON = 0;
         printf(WHITE);
-        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+        displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
       }
     }
     protectedCounter++;
     if (protectedCounter > 100)
     {
       printf(WHITE);
-      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+      displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
       protectedCounter=0;
       protectedOnHit=0;
     }
@@ -245,7 +260,7 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
           {
             eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
             myShip->coord->x=myShip->coord->x-4;
-            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
             continue;
           }
         }
@@ -255,7 +270,7 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
           {
             eraseShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x);
             myShip->coord->x = myShip->coord->x + 4;
-            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
+            displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getMyShipWidth);
             continue;
           }
         }
@@ -265,7 +280,7 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
           {
             if (fireChain[i]->state == 0)
             {
-              fireChain[i]->coord->y = (myShip->coord->y)-2;
+              fireChain[i]->coord->y = (myShip->coord->y)-1;
               fireChain[i]->relativePosY = fireChain[i]->coord->y;
               fireChain[i]->coord->x = (myShip->coord->x)+4;
               fireChain[i]->state = 1;

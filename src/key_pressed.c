@@ -26,14 +26,14 @@ char key_pressed()
 
 void fireMissile(int x, int y)
 {      
-        printf("\033[%d;%dH%c ", y, x, '|');
-        printf("\033[%d;%dH%c ", y+1, x, ' ');
+        printf("\033[%d;%dH%c", y, x, '|');
+        printf("\033[%d;%dH%c", y+1, x, ' ');
         fflush(stdout);
 }
 
 void enemyFireMissile (int x, int y)
 {
-        printf("\033[%d;%dH%c ", y, x, '|');
-        printf("\033[%d;%dH%c ", y-1, x, ' ');
+        printf("\033[%d;%dH%c", y, x, '|');
+        printf("\033[%d;%dH%c", y-1, x, ' ');
         fflush(stdout);
 }
