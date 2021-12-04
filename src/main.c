@@ -13,6 +13,7 @@
 #include "key_pressed.h"
 #include "linked_list.h"
 #include "menu.h"
+#include "colors.h"
 //detect leak
 //#include "leakdetector/leak_detector_c.h"
 
@@ -73,7 +74,7 @@ void *Game(void* _threadArgs)
   printf("\033[%d;%dH", myShip->coord->y, myShip->coord->x);
   while (1)
   {
-    printf("\033[1;37m");
+    printf(WHITE);
     if (shipList->top != NULL)
     {
       counter++;
@@ -116,13 +117,17 @@ void *Game(void* _threadArgs)
           enemy *current = shipList->top;
           while (current != NULL)
           {
-            if(fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
+            if (fireChain[i]->relativePosY <= current->hitbox->y && fireChain[i]->coord->x > current->coord->x && fireChain[i]->coord->x < current->hitbox->x)
             {
-              removeShip(shipList, fileSizeShip1, shipFile1, enemyID);
-              printf("\033[%d;%dH%c ", fireChain[i]->relativePosY+1, fireChain[i]->coord->x, ' ');  
+              current->nbOfLives -= 1;
+              printf("\033[%d;%dH%c ", fireChain[i]->relativePosY + 1, fireChain[i]->coord->x, ' ');
               fireChain[i]->state = 0;
               fireChain[i]->relativePosY = fireChain[i]->coord->y;
-              numberOfEnemiesAlive--; //To avoid seg fault if the next random enemy ship to fire is the one just killed
+              if (current->nbOfLives < 1)
+              {
+                removeShip(shipList, fileSizeShip1, shipFile1, enemyID);
+                numberOfEnemiesAlive--; //To avoid seg fault if the next random enemy ship to fire is the one just killed
+              }
               break;
             }
             enemyID++;
@@ -190,12 +195,12 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
   {
     if (redON != 0)
     {
-      printf("\033[1;31m");
+      printf(RED);
       displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
     }
     else
     {
-      printf("\033[1;37m");
+      printf(WHITE);
       displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
     }
     if (protectedCounter % 20 == 0)
@@ -203,20 +208,20 @@ for (int i = 0; i < args->nbEnemiesMissiles; i++)
       if (redON != 1)
       {
         redON = 1;
-        printf("\033[1;31m");
+        printf(RED);
         displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
       }
       else
       {
         redON = 0;
-        printf("\033[1;37m");
+        printf(WHITE);
         displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
       }
     }
     protectedCounter++;
     if (protectedCounter > 100)
     {
-      printf("\033[1;37m");
+      printf(WHITE);
       displayShip(fileSizeShip1, shipFile1, myShip->coord->y, myShip->coord->x, &getShipWidth);
       protectedCounter=0;
       protectedOnHit=0;

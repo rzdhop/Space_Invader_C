@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "linked_list.h"
 #include "struct_def.h"
+#include "colors.h"
 
 LinkedList *initialization(linkedMalloc *list2Free)
 {
@@ -15,6 +17,7 @@ LinkedList *initialization(linkedMalloc *list2Free)
     firstElement->coord->x = 4;
     firstElement->hitbox->x = firstElement->coord->x+8;
     firstElement->hitbox->y = firstElement->coord->y+1;
+    firstElement->nbOfLives = 3;
     firstElement->next = NULL;
     list->top = firstElement;
 
@@ -32,6 +35,7 @@ void addShip(LinkedList *list, int shipWidth)
     nouveau->coord->y = list->top->coord->y;
     nouveau->hitbox->x = nouveau->coord->x+8;
     nouveau->hitbox->y = list->top->coord->y;
+    nouveau->nbOfLives = 3;
 
     // Insertion de l'élément au début de la list 
     nouveau->next = list->top; 
@@ -68,11 +72,12 @@ void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID)
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
     if(list==NULL)return;
-    int numberOfShips=0, garbageInt=0;
+    int numberOfShips=0, garbageInt=0, nbOfLives = 0;
     enemy *current = list->top;
 
     while (current != NULL)
     {
+        nbOfLives = current->nbOfLives;
         if (direction == 'l')
         {
             current->coord->x -= 1;
@@ -83,10 +88,25 @@ int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char directi
             current->coord->x += 1;
             current->hitbox->x += 1;
         }
+        switch (nbOfLives)
+        {
+        case 3:
+            printf(RED);
+            break;
+        case 2:
+            printf(YELLOW);
+            break;
+        case 1:
+            printf(BLUE);
+            break;
+        default:
+            break;
+        }
         displayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
         numberOfShips++; 
         current = current->next;
     }
+    printf(WHITE);
     return numberOfShips;
 }
 

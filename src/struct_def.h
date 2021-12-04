@@ -45,6 +45,7 @@ struct enemy_data
   coordinate *hitbox;
   coordinate *coord;
   int ID;
+  int nbOfLives;
 };
 
 typedef struct main_friendly_ship main_ship;
