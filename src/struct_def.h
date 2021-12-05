@@ -22,8 +22,13 @@ enum gameType
 {
   EASY = 1,
   NORMAL = 2,
-  IMPOSSIBLE = 3
+  IMPOSSIBLE = 3,
+  OPTION = 4,
+  OPTION_CREDIT = 5,
+  OPTION_AIDE = 6,
+  RETURN = 7
 };
+
 typedef struct GameTypePos GameTypePos;
 struct GameTypePos
 {
