@@ -27,6 +27,3 @@ menu.o: menu.c
 
 clean:
 	rm -f $(OBJS) $(OUT)
-
-#run: $(OUT)        #######to activate if the automatic RUN is disabled########
-#	./$(OUT)

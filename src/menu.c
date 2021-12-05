@@ -7,9 +7,77 @@
 #include <fcntl.h>
 #include "struct_def.h"
 #include "key_pressed.h"
+#include "colors.h"
+
+//partie de code affchant l'ecran de defaite 
+void looseScreen(Env *args)
+{
+    system("clear");
+    char key;
+    int posYBase = args->ymax/2-10;
+    int posXBase = args->xmax/2-2;
+    afficheCadre(posXBase, posYBase);
+    printf(MAGENTA);
+    printf("\033[%d;%dH Vous avez perdu !", posYBase+2, posXBase-5);
+    printf("\033[%d;%dH Votre Score : %d", posYBase+4, posXBase-5, args->score);
+    printf("\033[%d;%dH Pressez 'ESC' pour quitter", posYBase+10, posXBase-7);
+    printf("\033[%d;%dH Ou pressez 'j' pour rejouer", posYBase+11, posXBase-7);
+    printf(RESET);
+    fflush(stdout);
+    while (1)
+    {
+      key = key_pressed();
+        switch (key)
+        {
+        case QUIT:
+            system("reset");
+            *(args->isGameDone_ptr) = 1;
+            return;
+        case 'j':
+            *(args->isGameDone_ptr) = 2;
+            return;
+        default:
+            break;
+        }
+    }
+}
+
+//Partie de Code afichant l'ecran de victoire
+void winScreen(Env *args)
+{
+    system("clear");
+    int posYBase = args->ymax/2-10;
+    int posXBase = args->xmax/2-2;
+    afficheCadre(posXBase, posYBase);
+    printf(GREEN);
+    printf("\033[%d;%dH Vous avez Gagné !", posYBase+2, posXBase-5);
+    printf("\033[%d;%dH Votre Score : %d", posYBase+4, posXBase-5, args->score);
+    printf("\033[%d;%dH Pressez 'ESC' pour quitter", posYBase+10, posXBase-7);
+    printf("\033[%d;%dH Ou pressez 'j' pour rejouer", posYBase+11, posXBase-7);
+    printf(RESET);
+    char key;
+    fflush(stdout);
+    while(1)
+    {
+        key = key_pressed();
+        switch (key)
+        {
+        case QUIT:
+            system("reset");
+            *(args->isGameDone_ptr) = 1;
+            return;
+        case 'j':
+            *(args->isGameDone_ptr) = 2;
+            return;
+        default:
+            break;
+        }
+    }
+}
 
 void afficheCadre(int posXBase, int posYBase)
 {
+    printf(RED);
     printf("\033[%d;%dH +=======================================+", posYBase-3, posXBase-15);
     for (int i=0; i < 20; i++)
     {
@@ -31,6 +99,7 @@ void afficheCadre(int posXBase, int posYBase)
     {
         printf("\033[%d;%dH +", posYBase-(3 -i), posXBase+27);
     }
+    printf(RESET);
 }
 
 int menu_option(int posXBase, int posYBase)
@@ -78,12 +147,14 @@ int menu_aide(int posXBase, int posYBase)
 
 void afficheMainMenu(GameTypePos easyMode, GameTypePos normalMode, GameTypePos impossibleMode, GameTypePos optionMode, GameTypePos cursor, int posXBase, int posYBase)
 {
-    printf("\033[%d;%dH EASY MODE", easyMode.coord.y, easyMode.coord.x);
-    printf("\033[%d;%dH NORMAL MODE", normalMode.coord.y, normalMode.coord.x);
-    printf("\033[%d;%dH IMPOSSIBLE MODE", impossibleMode.coord.y, impossibleMode.coord.x);
+    printf("\033[%d;%dH MODE FACILE", easyMode.coord.y, easyMode.coord.x);
+    printf("\033[%d;%dH MODE NORMAL ", normalMode.coord.y, normalMode.coord.x);
+    printf("\033[%d;%dH MODE PROGRESSIF", impossibleMode.coord.y, impossibleMode.coord.x);
     printf("\033[%d;%dH Option", optionMode.coord.y, optionMode.coord.x);
     afficheCadre(posXBase, posYBase);
 }
+
+//Affiche le menu principale et retourne une valeur qui depend du choix du joueur 
 int menu_instance(Env *args)
 {
     char key;
@@ -106,7 +177,7 @@ int menu_instance(Env *args)
     int externalBlinkCounter=0, internalBlinkCounter=0;
 	
     afficheMainMenu(easyMode, normalMode, impossibleMode, optionMode, cursor, posXBase, posYBase);
-    printf("\033[%d;%dH 8==> ", cursor.coord.y, cursor.coord.x); //Position the cursor before to save it
+    printf("\033[%d;%dH <==> ", cursor.coord.y, cursor.coord.x); //Position the cursor before to save it
     
     fflush(stdout);
     while (1)
@@ -146,7 +217,7 @@ int menu_instance(Env *args)
         }
         key = key_pressed();
 
-        //Below code is to make the selector blinking - increase to blink slower - decrease to blink faster
+        //Cette partie de code permet de faire clignotter le curseur
         externalBlinkCounter++;
         if (externalBlinkCounter % 100000 == 0) 
         {
@@ -160,10 +231,10 @@ int menu_instance(Env *args)
             else
             {
                 printf("\033[%d;%dH", cursor.coord.y, cursor.coord.x);
-                printf(" 8==> ");
+                printf(" <==> ");
             }
         }
-        /*end of blinking code*/
+        /*Find du code de clignotement du curseur*/
 
         if (key == DOWN)
         {        
@@ -256,44 +327,54 @@ int menu_instance(Env *args)
             switch (actualMode)
             {
             case EASY:
-                printf("\033[%d;%dH You selected EASY MODE\nLOADING....", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné le mode FACILE", normalMode.coord.y, posXBase-12);
+                fflush(stdout);
                 sleep(2);
+                system("clear");
                 return EASY;
                 break;
 
             case NORMAL:
-                printf("\033[%d;%dH You selected NORMAL MODE\nLOADING....", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné le mode NORMAL", normalMode.coord.y, posXBase-12);
+                fflush(stdout);
                 sleep(2);
+                system("clear");
                 return NORMAL;
                 break;
 
             case IMPOSSIBLE:
-                printf("\033[%d;%dH You selected IMPOSSIBLE MODE\nLOADING....", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné le mode PROGRESSIF", normalMode.coord.y, posXBase-15);
+                fflush(stdout);
                 sleep(2);
+                system("clear");
                 return IMPOSSIBLE;
                 break;
 
             case OPTION:
-                printf("\033[%d;%dH You selected OPTION.", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné OPTION.", normalMode.coord.y, posXBase-10);
                 fflush(stdout);
                 sleep(1);
+                system("clear");
                 actualMode = menu_option(posXBase, posYBase);
                 break;
 
             case OPTION_CREDIT:
-                printf("\033[%d;%dH You selected CREDIT.", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné CREDIT.", normalMode.coord.y, posXBase-10);
                 fflush(stdout);
                 sleep(1);
+                system("clear");
                 actualMode = menu_credit(posXBase, posYBase);
                 break;
             case OPTION_AIDE:
-                printf("\033[%d;%dH You selected AIDE.", normalMode.coord.y, posXBase-5);
+                printf("\033[%d;%dH Vous avez séléctionné AIDE.", normalMode.coord.y, posXBase-10);
                 fflush(stdout);
                 sleep(1);
+                system("clear");
                 actualMode = menu_aide(posXBase, posYBase);;
                 break;
 
             default:
+                system("clear");
 				printf("\033[%d;%dH Error: Please select a mode", normalMode.coord.y, posXBase-5);
 				break;
 			}

@@ -68,7 +68,7 @@ struct malloc2free
   void *addr;
 };
 
-typedef struct linkedMalloc linkedMalloc;
+typedef struct linkedMalloc linkedMalloc; //linked chain of garbage colector
 struct linkedMalloc
 {
   malloc2free *top;
@@ -78,7 +78,7 @@ struct linkedMalloc
 typedef struct Env Env;
 struct Env
 {
-  linkedMalloc *list2free;
+  linkedMalloc *list2free; //list for garbage collector
   main_ship *ship;
   char *keyPressed;
   int xmax;
@@ -89,6 +89,8 @@ struct Env
   int nbEnemiesMissiles;
   int nbFriendlyShipLives;
   int gameSpeed;
+  int gameType;
+  int score;
 };
 
 typedef struct LinkedList LinkedList;
