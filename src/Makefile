@@ -1,6 +1,6 @@
 OBJS	= main.o struct_def.o key_pressed.o linked_list.o menu.o
 SOURCE	= main.c struct_def.c key_pressed.c linked_list.c menu.c
-HEADER	= struct_def.h key_pressed.h linked_list.h menu.h
+HEADER	= struct_def.h key_pressed.h linked_list.h menu.h colors.h
 OUT	= SpaceInvaders
 CC	 = gcc
 FLAGS	 = -g -c -Wall

@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "linked_list.h"
 #include "struct_def.h"
+#include "colors.h"
 
-LinkedList *initialization(linkedMalloc *list2Free)
+LinkedList *initialization(linkedMalloc *list2Free, int shipWidth, int shipHeight)
 {
     LinkedList *list = malloc(sizeof(LinkedList));
     registerFree(list2Free, list);
@@ -13,8 +15,9 @@ LinkedList *initialization(linkedMalloc *list2Free)
     firstElement->ID = 1;
     firstElement->coord->y = 1;
     firstElement->coord->x = 4;
-    firstElement->hitbox->x = firstElement->coord->x+8;
-    firstElement->hitbox->y = firstElement->coord->y+1;
+    firstElement->hitbox->x = firstElement->coord->x + shipWidth;
+    firstElement->hitbox->y = firstElement->coord->y + shipHeight - 1;
+    firstElement->nbOfLives = 3;
     firstElement->next = NULL;
     list->top = firstElement;
 
@@ -30,8 +33,9 @@ void addShip(LinkedList *list, int shipWidth)
     nouveau->ID = list->top->ID+1;
     nouveau->coord->x = list->top->coord->x+(shipWidth+1);
     nouveau->coord->y = list->top->coord->y;
-    nouveau->hitbox->x = nouveau->coord->x+8;
-    nouveau->hitbox->y = list->top->coord->y;
+    nouveau->hitbox->x = list->top->hitbox->x + shipWidth + 1;
+    nouveau->hitbox->y = list->top->hitbox->y;
+    nouveau->nbOfLives = 3;
 
     // Insertion de l'élément au début de la list 
     nouveau->next = list->top; 
@@ -68,25 +72,41 @@ void removeShip(LinkedList *list, int fileSizeShip, char *shipFile, int enemyID)
 int displayList(LinkedList *list, int fileSizeShip, char *shipFile, char direction)
 {
     if(list==NULL)return;
-    int numberOfShips=0, garbageInt=0;
+    int numberOfShips=0, garbageInt=0, nbOfLives = 0;
     enemy *current = list->top;
 
     while (current != NULL)
     {
+        nbOfLives = current->nbOfLives;
         if (direction == 'l')
         {
-            current->coord->x -= 2;
-            current->hitbox->x -= 2;
+            current->coord->x -= 1;
+            current->hitbox->x -= 1;
         }
         else
         {
-            current->coord->x += 2;
-            current->hitbox->x += 2;
+            current->coord->x += 1;
+            current->hitbox->x += 1;
         }
-        diplayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
+        switch (nbOfLives)
+        {
+        case 3:
+            printf(RED);
+            break;
+        case 2:
+            printf(YELLOW);
+            break;
+        case 1:
+            printf(BLUE);
+            break;
+        default:
+            break;
+        }
+        displayShip(fileSizeShip, shipFile, current->coord->y, current->coord->x, &garbageInt);
         numberOfShips++; 
         current = current->next;
     }
+    printf(WHITE);
     return numberOfShips;
 }
 
@@ -100,4 +120,30 @@ void eraseList(LinkedList *list, int fileSizeShip, char *shipFile)
         current = current->next;
     }
     printf("\n");
+}
+
+enemy* getLastOfLinkedList(LinkedList *list, int *numberOfEnemiesAlive)
+{
+    enemy *enemy = list->top;
+    int enemiesAlive=1;
+    while (enemy->next != NULL)
+    {
+        enemy = enemy->next;
+        enemiesAlive++;
+    }
+    *numberOfEnemiesAlive = enemiesAlive;
+    return enemy;
+}
+
+enemy* getShipByID(LinkedList *list, int shipID)
+{
+    enemy *enemy = list->top;
+    if (shipID>1)
+    {
+       for (int i = 0; i < shipID-1; i++)
+       {
+           enemy = enemy->next;
+       }
+    }
+    return enemy;
 }

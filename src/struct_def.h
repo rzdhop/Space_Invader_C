@@ -50,6 +50,7 @@ struct enemy_data
   coordinate *hitbox;
   coordinate *coord;
   int ID;
+  int nbOfLives;
 };
 
 typedef struct main_friendly_ship main_ship;
@@ -85,7 +86,9 @@ struct Env
   int *isGameDone_ptr;
   int nbEnemy;
   int nbMissiles;
-  
+  int nbEnemiesMissiles;
+  int nbFriendlyShipLives;
+  int gameSpeed;
 };
 
 typedef struct LinkedList LinkedList;
@@ -95,7 +98,7 @@ struct LinkedList
 };
 
 char *GetShip(char *fileName, int *fileSizePTR);
-int diplayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth);
+int displayShip(int fileSizeShip, char *shipFile, int y, int x, int *getShipWidth);
 void eraseShip (int fileSizeShip, char *shipFile, int y, int x);
 linkedMalloc *_iniFreeRegister(void *addr2Free);
 void registerFree(linkedMalloc *list, void *addr2Free);
